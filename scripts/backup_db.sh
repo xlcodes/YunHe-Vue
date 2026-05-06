@@ -2,7 +2,7 @@
 # 数据库备份脚本
 
 # 配置项
-COMPRESS="true"              # 是否压缩备份文件 (true/false)
+COMPRESS="false"              # 是否压缩备份文件 (true/false)
 BACKUP_DIR="backups"         # 备份文件存放目录
 CLEAN_OLD_BACKUPS="true"     # 是否自动清理旧备份 (true/false)
 RETENTION_DAYS="7"           # 保留备份天数

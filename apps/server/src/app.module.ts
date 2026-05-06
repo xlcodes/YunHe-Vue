@@ -12,6 +12,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common'
 import { JwtAuthGuard, ThrottlerLimitGuard, DemoEnvironmentGuard, PermissionAuthGuard } from '@/common'
 import { ReponseTransformInterceptor, ResponseCacheInterceptor, OperationLogInterceptor } from '@/common'
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { ReponseTransformInterceptor, ResponseCacheInterceptor, OperationLogInte
     SharedModule, // 共享模块
     AuthModule, // 认证模块
     SystemModule, // 系统管理模块
-    MonitorModule, // 系统监控模块
+    MonitorModule, AiModule, // 系统监控模块
   ],
 
   providers: [

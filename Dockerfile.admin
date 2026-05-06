@@ -4,6 +4,10 @@ WORKDIR /app
 
 # 复制依赖清单（与后端构建类似，利用缓存）
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+
+# 复制 共享工具包 utils
+COPY packages/utils/ ./packages/utils/
+
 COPY apps/admin/package.json ./apps/admin/
 
 # 安装全部依赖（包含 dev，用于构建）

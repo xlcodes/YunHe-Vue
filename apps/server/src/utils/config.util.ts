@@ -65,6 +65,9 @@ export function configuration() {
 }
 
 function adaptDockerEnv(finalConfig: Record<string, any>) {
+  // 从环境变量中获取是否为演示模式
+  const { SERVER_IS_DEMO } = process.env
+  if (SERVER_IS_DEMO) finalConfig.server.isDemo = SERVER_IS_DEMO === 'true'
   // 从环境变量中获取数据库配置
   const { MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env
   if (MYSQL_USERNAME) finalConfig.database.username = MYSQL_USERNAME

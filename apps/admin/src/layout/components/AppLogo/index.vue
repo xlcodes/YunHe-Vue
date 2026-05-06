@@ -3,14 +3,14 @@
     <transition name="sidebar-logo-fade">
       <!-- 侧栏展开状态 -->
       <router-link v-if="isShowTitle" key="expand" to="/" class="flex-center wh-full">
-        <img v-if="logoImg" :src="logoImg" alt="logo" draggable="false" />
+        <img src="/img/logo.png" alt="logo" draggable="false" />
         <h1 class="app-logo-text" v-if="isShowTitle">{{ VITE_APP_TITLE }}</h1>
       </router-link>
 
       <!-- 侧栏折叠状态 -->
       <router-link v-else key="collapse" to="/" class="flex-center wh-full">
-        <img v-if="logoImg" :src="logoImg" alt="logo" draggable="false" />
-        <h1 v-else class="app-logo-text" v-if="isShowTitle">{{ VITE_APP_TITLE }}</h1>
+        <img src="/img/logo.png" alt="logo" draggable="false" />
+        <h1 class="app-logo-text" v-if="isShowTitle">{{ VITE_APP_TITLE }}</h1>
       </router-link>
     </transition>
   </h1>
@@ -18,7 +18,6 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'AppLogo' })
-import logoImg from '@/assets/images/logo.png'
 
 const appStore = useAppStore()
 

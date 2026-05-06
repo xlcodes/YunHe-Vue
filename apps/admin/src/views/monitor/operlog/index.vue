@@ -86,7 +86,7 @@ const columns: ProTableColumn<OperLogEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
   { align: 'center', prop: 'requestId', label: '请求ID', showOverflowTooltip: true, width: 100 },
-  { align: 'center', prop: 'title', label: '系统模块', showOverflowTooltip: true, width: 90 },
+  { align: 'center', prop: 'title', label: '系统模块', showOverflowTooltip: true, width: 120 },
   { align: 'center', prop: 'businessType', label: '操作类型', slot: 'businessType', width: 90 },
   { align: 'center', prop: 'username', label: '操作人员', showOverflowTooltip: true },
   { align: 'center', prop: 'ip', label: '操作地址', showOverflowTooltip: true, width: 90 },

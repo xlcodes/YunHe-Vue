@@ -2,21 +2,20 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/images/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
     <!-- 引入浏览器重置样式表 -->
     <link rel="stylesheet" href="/css/reset.css" />
+    <link rel="stylesheet" href="/css/app-loading.css" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
   </head>
   <body>
     <!-- VueJS 挂载的 DOM 容器 -->
     <div id="app">
-      <!-- 临时样式，Vue 挂载后自动移除，避免污染 -->
-      <link rel="stylesheet" href="/css/app-loading.css" />
       <!-- 白屏阶段会执行的 CSS 加载动画 -->
       <div class="app-loading">
         <div class="app-loading-wrap">
-          <img src="/src/assets/images/logo.png" class="app-loading-logo" alt="Logo" />
+          <img src="/img/logo.png" class="app-loading-logo" alt="Logo" />
           <div class="app-loading-dots">
             <span class="dot"><i></i><i></i><i></i><i></i></span>
           </div>

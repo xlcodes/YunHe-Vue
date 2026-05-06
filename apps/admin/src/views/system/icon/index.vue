@@ -30,7 +30,7 @@ const mode = ref<number>(1)
  * @description 从指定目录读取所有 SVG 文件并提取文件名（不含扩展名）
  */
 function getList() {
-  const svgFileList = import.meta.glob('@/assets/icons/*.svg', { eager: true })
+  const svgFileList = import.meta.glob('@/assets/icons/*.svg')
   const svgPathList: string[] = Object.keys(svgFileList)
   const svgNameList = svgPathList.map((svgPath) => svgPath.match(/\/([^/]+)\.\w+$/)?.[1] || svgPath)
   list.value = svgNameList

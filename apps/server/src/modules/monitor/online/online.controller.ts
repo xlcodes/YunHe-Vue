@@ -23,7 +23,7 @@ export class OnlineController {
 
   /** 强制用户退出登录，清除与该用户相关的所有 Redis 缓存 */
   @Delete('forceLogout')
-  @RequirePermissions(['monitor:online:logout'])
+  @RequirePermissions(['monitor:online:forceLogout'])
   @OperLog({ title: '在线用户', businessType: BusinessType.FORCE_LOGOUT })
   public forceLogout(@Query() data: ForceLogoutDto) {
     return this.onlineService.forceLogout(data)

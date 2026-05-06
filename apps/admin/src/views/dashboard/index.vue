@@ -38,8 +38,8 @@
       </div>
     </el-card>
 
-    <el-row class="mt-16px" :gutter="16">
-      <el-col :span="8" :xs="24">
+    <el-row class="my-16px" :gutter="16">
+      <el-col :span="12" :xs="24">
         <el-card>
           <template #header>联系信息（QQ群）</template>
           <a :href="qqGroup.link" target="_blank" class="cursor-pointer flex items-center gap-4px" v-for="qqGroup in qqGroupList" :key="qqGroup.code">
@@ -47,31 +47,31 @@
           </a>
         </el-card>
       </el-col>
-      <el-col :span="8" :xs="24">
-        <el-card>
-          <template #header>更新日志</template>
-          <el-collapse accordion>
-            <el-collapse-item title="v1.0.0 - 2026-04-27">
-              <ol>
-                <li>1、云禾前后端分离系统正式发布</li>
-              </ol>
-            </el-collapse-item>
-          </el-collapse>
-        </el-card>
-      </el-col>
-      <el-col :span="8" :xs="24">
+      <el-col :span="12" :xs="24">
         <el-card>
           <template #header>捐赠支持</template>
           <img src="@/assets/images/pay.png" draggable="false" alt="pay" />
         </el-card>
       </el-col>
     </el-row>
+
+    <el-card>
+      <template #header>更新日志</template>
+      <el-collapse accordion>
+        <el-collapse-item v-for="log in changelogs" :key="log.version" :title="`v` + log.version + ' - ' + log.date">
+          <div v-for="item in log.description" :key="item.content">
+            <el-text line-clamp="1">{{ item.content }}</el-text>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
 defineOptions({ name: 'Dashboard' })
 import { techs } from './techs'
+import { changelogs } from './changelogs'
 
 const qqGroupList = [
   {
