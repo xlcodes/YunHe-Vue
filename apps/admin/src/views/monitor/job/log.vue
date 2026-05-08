@@ -1,26 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['monitor:job:query']">
-      <el-form-item label="任务名称" prop="jobName">
-        <el-input v-model="queryParams.jobName" placeholder="请输入任务名称" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="任务组名" prop="jobGroup">
-        <el-input v-model="queryParams.jobGroup" placeholder="请输入任务组名" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="执行状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 160px" :options="sys_common_status"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['monitor:job:query']" />
 
     <div class="mb-16px">
       <el-button plain type="danger" @click="handleDelete()" :disabled="!isMultiple" v-permissions="['monitor:job:delete']">
@@ -58,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import type { JobLogEntity, JobLogQueryParams } from '@/types'
+import type { JobLogEntity, JobLogQueryParams, ProSearchItem } from '@/types'
 import type { ProTableColumn } from '@/types'
 import { JobLogRequest } from '@/api/monitor/job-log.request'
 import { linkDownload, TipModal } from '@/utils'
@@ -75,9 +55,13 @@ const exportLoading = ref<boolean>(false)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<JobLogQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 const jobLogDetailDialogRef = useTemplateRef('jobLogDetailDialogRef')
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'jobName', label: '任务名称' },
+  { type: 'input', prop: 'jobGroup', label: '任务组名' },
+  { type: 'select', prop: 'status', label: '执行状态', options: sys_common_status.value },
+]
 const columns: ProTableColumn<JobLogEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -86,7 +70,7 @@ const columns: ProTableColumn<JobLogEntity>[] = [
   { align: 'center', prop: 'invokeTarget', label: '调用目标', showOverflowTooltip: true, minWidth: 200 },
   { align: 'center', prop: 'jobMessage', label: '日志信息', showOverflowTooltip: true, minWidth: 200 },
   { align: 'center', prop: 'status', label: '执行状态', slot: 'status', width: 90 },
-  { align: 'center', prop: 'createTime', label: '执行时间', showOverflowTooltip: true, width: 160 },
+  { align: 'center', prop: 'createTime', label: '执行时间', showOverflowTooltip: true, width: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', minWidth: 120 },
 ]
 
@@ -121,7 +105,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

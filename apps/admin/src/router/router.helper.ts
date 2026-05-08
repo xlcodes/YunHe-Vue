@@ -38,6 +38,7 @@ export function generateRouteName(menu: MenuEntity) {
   return menu.component ? upperFirst(camelCase(menu.component.replace('index', ''))) : upperFirst(camelCase(menu.path))
 }
 export function generateRoutePath(menu: MenuEntity) {
+  if (isExternal(menu.path)) return menu.path
   return menu.parentId === '0' ? `/${menu.path}` : menu.path
 }
 export function generateRoutes(backRoutes: MenuEntity[], parentId: string = '0') {
@@ -52,7 +53,7 @@ export function generateRoutes(backRoutes: MenuEntity[], parentId: string = '0')
     route.meta = {}
     route.meta.hidden = backRoute.visible === CommonConstant.STATUS_DISABLE
     route.meta.keepAlive = backRoute.isCache === CommonConstant.STATUS_NORMAL
-    route.meta.alwaysShow = backRoute.menuType === 'M'
+    route.meta.alwaysShow = backRoute.menuType === 'M' && !isExternal(backRoute.path)
     route.meta.title = backRoute.menuName
     route.meta.icon = backRoute.icon
     const childrenRoutes = generateRoutes(backRoutes, backRoute.id)

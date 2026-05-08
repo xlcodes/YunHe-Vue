@@ -36,11 +36,11 @@
 defineOptions({ name: 'JobLogDetailDialog' })
 import type { JobLogEntity } from '@/types'
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 
 const visible = ref<boolean>(false)
 const jobLogInfo = ref({} as JobLogEntity)
-const dialogWidth = computed(() => (getterStore.isDesktop ? '800px' : 'calc(100% - 32px)'))
+const dialogWidth = computed(() => (appStore.isDesktop ? '800px' : 'calc(100% - 32px)'))
 
 function open(record: JobLogEntity) {
   jobLogInfo.value = record

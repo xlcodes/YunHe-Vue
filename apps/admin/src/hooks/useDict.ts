@@ -23,7 +23,11 @@ export function useDict<T extends string[]>(...dictTypes: T) {
       // 已有缓存：直接返回
       if (dictCache[dictType]) return
       // 正在请求中：复用已有 Promise
-      if (pendingRequests[dictType]) return pendingRequests[dictType]
+      if (pendingRequests[dictType]) {
+        await pendingRequests[dictType] // 等第一个请求跑完
+        dictData[dictType] = dictCache[dictType] // 从全局缓存同步到本地
+        return
+      }
       // 新请求：创建并存储 Promise
       pendingRequests[dictType] = DictRequest.findDataByType({ dictType })
       const rawList = await pendingRequests[dictType]

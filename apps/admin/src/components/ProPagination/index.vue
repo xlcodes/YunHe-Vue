@@ -39,9 +39,9 @@ const props = defineProps({
 /** 接收父组件传递的事件 */
 const emits = defineEmits(['update:page', 'update:limit', 'pagination'])
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 
-const layout = computed(() => (getterStore.isMobile ? `total, prev, jumper, next` : props.layout))
+const layout = computed(() => (appStore.isMobile ? `total, prev, jumper, next` : props.layout))
 
 /** 利用 computed 拦截 v-model */
 const currentPage = computed({

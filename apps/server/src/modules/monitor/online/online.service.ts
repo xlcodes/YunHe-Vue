@@ -40,8 +40,22 @@ export class OnlineService {
 
   /** 强制用户退出登录，清除与该用户相关的所有 Redis 缓存 */
   public async forceLogout(data: ForceLogoutDto) {
-    const keys = await this.redisService.keys(`*${data.userId}*`)
-    if (keys.length) await this.redisService.del(keys)
+    const { userId, uuid } = data
+    const tokenPattern = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}:${uuid}` // 登录token
+    const onlinePattern = `${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}:${uuid}` // 在线状态
+    await this.redisService.del(tokenPattern, onlinePattern)
     return '强退成功'
   }
+
+  /** 强制【全端】退出登录（踢掉该用户所有设备） */
+  // public async forceAllLogout(data: { userId: string }) {
+  //   const { userId } = data
+  //   const tokenPattern = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}:*`
+  //   const onlinePattern = `${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}:*`
+  //   const tokenKeys = await this.redisService.keys(tokenPattern)
+  //   const onlineKeys = await this.redisService.keys(onlinePattern)
+  //   const allKeys = [...tokenKeys, ...onlineKeys]
+  //   if (allKeys.length) await this.redisService.del(...allKeys)
+  //   return '全端强退成功'
+  // }
 }

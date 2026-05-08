@@ -33,5 +33,7 @@ export const useUserStore = defineStore('user', () => {
     tagsViewStore.clear()
   }
 
-  return { avatar, roles, permissions, user, login, getInfo, logout }
+  const isAdmin = computed(() => roles.value.includes('admin'))
+
+  return { avatar, roles, permissions, user, isAdmin, login, getInfo, logout }
 })

@@ -31,16 +31,20 @@ export class JwtAuthGuard implements CanActivate {
 
       // 校验 JWT 签名合法性、是否过期
       const payload = this.jwtService.verify<AuthType.JwtPayload>(accessToken)
+      const { userId, uuid } = payload
 
       // 校验 Redis 中的 AccessToken 是否存在
-      const REDIS_TOKEN_KEY = `${RedisConstant.ACCESS_TOKEN_KEY}:${payload.userId}`
-      const redisToken = await this.redisService.expire(REDIS_TOKEN_KEY, this.expiresIn)
-      if (!redisToken) throw new Error('invalid token')
+      const REDIS_TOKEN_KEY = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}:${uuid}`
+      const redisToken = await this.redisService.get(REDIS_TOKEN_KEY)
+      if (!redisToken || redisToken !== accessToken) throw new Error('invalid token')
 
       // 自动续期用户在线状态、角色、权限缓存
-      await this.redisService.expire(`${RedisConstant.ADMIN_USER_ONLINE_KEY}:${payload.userId}`, this.expiresIn)
-      await this.redisService.expire(`${RedisConstant.ADMIN_USER_ROLES}:${payload.userId}`, this.expiresIn)
-      await this.redisService.expire(`${RedisConstant.ADMIN_USER_PERMISSIONS}:${payload.userId}`, this.expiresIn)
+      await Promise.all([
+        this.redisService.expire(REDIS_TOKEN_KEY, this.expiresIn),
+        this.redisService.expire(`${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}:${uuid}`, this.expiresIn),
+        this.redisService.expire(`${RedisConstant.ADMIN_USER_ROLES}:${userId}`, this.expiresIn),
+        this.redisService.expire(`${RedisConstant.ADMIN_USER_PERMISSIONS}:${userId}`, this.expiresIn),
+      ])
 
       // 将用户信息挂载到请求对象，供后续接口使用
       request[CommonConstant.JWT_PAYLOAD] = payload

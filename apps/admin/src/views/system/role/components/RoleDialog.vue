@@ -35,7 +35,7 @@ const emits = defineEmits<{
   getList: []
 }>()
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const visible = ref<boolean>(false)
@@ -43,7 +43,7 @@ const visible = ref<boolean>(false)
 const formRef = useTemplateRef('formRef')
 const form = ref({} as RoleEntity)
 const isUpdate = ref<boolean>(false)
-const dialogWidth = computed(() => (getterStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
+const dialogWidth = computed(() => (appStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
 const dialogTitle = computed(() => (isUpdate.value ? '编辑角色' : '新增角色'))
 const tipMessage = computed(() => (isUpdate.value ? '编辑成功' : '新增成功'))
 

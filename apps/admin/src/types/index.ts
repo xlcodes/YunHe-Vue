@@ -1,4 +1,5 @@
 export * from '@/components/ProTable/types'
+export * from '@/components/ProSearch/types'
 
 export * from './api/ai'
 export * from './api/auth'

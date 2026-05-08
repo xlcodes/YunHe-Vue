@@ -52,11 +52,11 @@
 defineOptions({ name: 'OperateDetailDialog' })
 import type { OperLogEntity } from '@/types'
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 
 const visible = ref<boolean>(false)
 const operInfo = ref({} as OperLogEntity)
-const dialogWidth = computed(() => (getterStore.isDesktop ? `800px` : `calc(100% - 32px)`))
+const dialogWidth = computed(() => (appStore.isDesktop ? `800px` : `calc(100% - 32px)`))
 
 function open(record: OperLogEntity) {
   operInfo.value = record

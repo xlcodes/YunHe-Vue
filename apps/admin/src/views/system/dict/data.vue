@@ -1,31 +1,12 @@
 <template>
   <div class="app-content">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['system:dict:query']">
-      <el-form-item label="字典类型" prop="dictType">
-        <el-select v-model="queryParams.dictType" placeholder="请选择" clearable style="width: 200px" @change="handleQuery">
+    <ProSearch :items="items" v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['system:dict:query']">
+      <template #dictType="{ model, item }">
+        <el-select v-model="model[item.prop]" placeholder="请选择字典类型" clearable @change="handleQuery">
           <el-option v-for="item in typeOptions" :key="item.id" :label="item.dictName" :value="item.dictType" />
         </el-select>
-      </el-form-item>
-      <el-form-item label="字典标签" prop="dictLabel">
-        <el-input v-model="queryParams.dictLabel" placeholder="请输入字典标签" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="字典状态" clearable style="width: 160px">
-          <el-option label="正常" value="1" />
-          <el-option label="停用" value="0" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+      </template>
+    </ProSearch>
 
     <div class="mb-16px">
       <el-button plain type="primary" @click="handleCreate" :disabled="!queryParams.dictType" v-permissions="['system:dict:create']">
@@ -48,9 +29,7 @@
         <span v-else>{{ row.dictLabel }}</span>
       </template>
       <template #status="{ row }">
-        <el-tag :type="row.status === '1' ? 'primary' : 'danger'">
-          {{ row.status === '1' ? '正常' : '停用' }}
-        </el-tag>
+        <DictTag :options="sys_normal_disable" :value="row.status" />
       </template>
       <template #action="{ row }">
         <el-link type="primary" @click="handleEdit(row)" v-permissions="['system:dict:update']">修改</el-link>
@@ -98,7 +77,7 @@
 
 <script setup lang="ts">
 import { TipModal } from '@/utils'
-import type { ProTableColumn } from '@/types'
+import type { ProSearchItem, ProTableColumn } from '@/types'
 import { DictRequest } from '@/api/system/dict.request'
 import type { DictDataEntity, DictDataQueryParams, DictTypeEntity } from '@/types'
 
@@ -112,7 +91,6 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<DictDataQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 const typeOptions = ref<DictTypeEntity[]>([])
 
 const visible = ref<boolean>(false)
@@ -121,8 +99,8 @@ const formRef = useTemplateRef('formRef')
 const form = ref<Partial<DictDataEntity>>({ status: '1', dictSort: 1 })
 const isEdit = computed(() => !!form.value.id)
 
-const getterStore = useGetterStore()
-const dialogWidth = computed(() => (getterStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
+const appStore = useAppStore()
+const dialogWidth = computed(() => (appStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
 
 // 数据标签回显样式
 const listClassOptions = [
@@ -132,7 +110,11 @@ const listClassOptions = [
   { value: 'warning', label: '警告' },
   { value: 'danger', label: '危险' },
 ]
-
+const items: ProSearchItem[] = [
+  { label: '字典类型', prop: 'dictType', type: 'select' },
+  { label: '字典标签', prop: 'dictLabel', type: 'input' },
+  { label: '字典状态', prop: 'status', type: 'select', options: sys_normal_disable.value },
+]
 const columns: ProTableColumn<DictDataEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -141,7 +123,7 @@ const columns: ProTableColumn<DictDataEntity>[] = [
   { align: 'center', prop: 'dictSort', label: '排序' },
   { align: 'center', prop: 'status', label: '状态', slot: 'status' },
   { align: 'center', prop: 'remark', label: '备注', showOverflowTooltip: true, width: 120 },
-  { align: 'center', prop: 'createTime', label: '创建时间', width: 160 },
+  { align: 'center', prop: 'createTime', label: '创建时间', width: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', minWidth: 120 },
 ]
 
@@ -200,7 +182,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   queryParams.value.dictType = route.query.dictType as string
   handleQuery()
 }

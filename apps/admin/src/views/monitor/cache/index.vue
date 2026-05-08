@@ -2,7 +2,7 @@
   <div class="app-content">
     <el-card>
       <template #header>基本信息</template>
-      <el-descriptions :column="getterStore.isDesktop ? 4 : 1" border v-if="cacheInfo.info" label-width="120px">
+      <el-descriptions :column="appStore.isDesktop ? 4 : 1" border v-if="cacheInfo.info" label-width="120px">
         <el-descriptions-item label="Redis 版本">{{ cacheInfo.info.redis_version }}</el-descriptions-item>
         <el-descriptions-item label="运行模式">{{ formatRedisMode }}</el-descriptions-item>
         <el-descriptions-item label="端口">{{ cacheInfo.info.tcp_port }}</el-descriptions-item>
@@ -43,7 +43,7 @@ import type { CacheInfo } from '@/types'
 import type { EChartsOption } from 'echarts'
 import { CacheRequest } from '@/api/monitor/cache.request'
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 const cacheInfo = ref({} as CacheInfo)
 
 const RedisModeMap = {
@@ -127,8 +127,7 @@ const memoryChartOption = computed<EChartsOption>(() => {
 
   return {
     tooltip: {
-      formatter:
-        maxMem.bytes > 0 ? `内存使用: ${usedMemoryHuman}<br/>最大内存: ${maxMemoryHuman}<br/>使用率: ${usagePercent}%` : `内存使用: ${usedMemoryHuman}<br/>最大内存: 未设置限制`,
+      formatter: maxMem.bytes > 0 ? `内存使用: ${usedMemoryHuman}<br/>最大内存: ${maxMemoryHuman}<br/>使用率: ${usagePercent}%` : `内存使用: ${usedMemoryHuman}<br/>最大内存: 未设置限制`,
     },
     series: [
       {

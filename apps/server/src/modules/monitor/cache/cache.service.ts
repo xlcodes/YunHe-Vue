@@ -23,7 +23,7 @@ export class CacheService {
   public async clearCacheName(name: string) {
     if (!name) return '缓存分类名称不能为空'
     const keys = await this.redisService.keys(`${name}:*`)
-    if (keys.length) await this.redisService.del(keys)
+    if (keys.length) await this.redisService.del(...keys)
     return `成功清理了 ${keys.length} 条数据`
   }
 

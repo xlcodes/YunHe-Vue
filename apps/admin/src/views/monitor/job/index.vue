@@ -1,26 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['monitor:job:query']">
-      <el-form-item label="任务名称" prop="jobName">
-        <el-input v-model="queryParams.jobName" placeholder="请输入任务名称" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="任务组名" prop="jobGroup">
-        <el-input v-model="queryParams.jobGroup" placeholder="请输入任务组名" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 160px" :options="sys_job_status"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['monitor:job:query']" />
 
     <div class="mb-16px">
       <el-button plain type="primary" @click="handleCreate" v-permissions="['monitor:job:create']">
@@ -64,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import type { JobEntity, JobQueryParams } from '@/types'
+import type { JobEntity, JobQueryParams, ProSearchItem } from '@/types'
 import type { ProTableColumn } from '@/types'
 import { JobRequest } from '@/api/monitor/job.request'
 import { TipModal } from '@/utils'
@@ -80,9 +60,13 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<JobQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 const jobDialogRef = useTemplateRef('jobDialogRef')
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'jobName', label: '任务名称' },
+  { type: 'input', prop: 'jobGroup', label: '任务组名' },
+  { type: 'select', prop: 'status', label: '任务状态', options: sys_job_status.value },
+]
 const columns: ProTableColumn<JobEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -128,7 +112,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

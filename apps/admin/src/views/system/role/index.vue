@@ -1,26 +1,6 @@
 <template>
   <div class="app-content">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['system:role:query']">
-      <el-form-item label="角色编码" prop="roleCode">
-        <el-input v-model="queryParams.roleCode" placeholder="请输入角色编码" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="角色名称" prop="roleName">
-        <el-input v-model="queryParams.roleName" placeholder="请输入角色名称" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="角色状态" clearable style="width: 160px" :options="sys_normal_disable"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items="items" v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['system:role:query']"></ProSearch>
 
     <div class="mb-16px">
       <el-button plain type="primary" @click="handleCreate" v-permissions="['system:role:create']">
@@ -38,9 +18,11 @@
         <el-switch size="small" v-model="row.status" inline-prompt active-value="1" inactive-value="0" @click="handleChangeStatus(row)" v-permissions="['system:role:update']" />
       </template>
       <template #action="{ row }">
-        <el-link type="primary" @click="handleEdit(row)" v-permissions="['system:role:update']">修改</el-link>
-        <el-link type="primary" @click="handleDelete(row)" v-permissions="['system:role:delete']">删除</el-link>
-        <el-link type="primary" @click="handleAuth(row)" v-permissions="['system:role:update']">授权</el-link>
+        <template v-if="row.roleCode !== 'admin'">
+          <el-link type="primary" @click="handleEdit(row)" v-permissions="['system:role:update']">修改</el-link>
+          <el-link type="primary" @click="handleDelete(row)" v-permissions="['system:role:delete']">删除</el-link>
+          <el-link type="primary" @click="handleAuth(row)" v-permissions="['system:role:update']">授权</el-link>
+        </template>
       </template>
     </ProTable>
 
@@ -55,11 +37,10 @@
 
 <script setup lang="ts">
 import { TipModal } from '@/utils'
-import type { ProTableColumn } from '@/types'
 import RoleDialog from './components/RoleDialog.vue'
 import { RoleRequest } from '@/api/system/role.request'
-import type { RoleEntity, RoleQueryParams } from '@/types'
 import AuthPermission from './components/AuthPermission.vue'
+import type { RoleEntity, RoleQueryParams, ProTableColumn, ProSearchItem } from '@/types'
 
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
@@ -70,10 +51,14 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<RoleQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 const roleDialogRef = useTemplateRef('roleDialogRef')
 const authPermissionRef = useTemplateRef('authPermissionRef')
 
+const items: ProSearchItem[] = [
+  { prop: 'roleCode', label: '角色编码', type: 'input' },
+  { prop: 'roleName', label: '角色名称', type: 'input' },
+  { prop: 'status', label: '角色状态', type: 'select', options: sys_normal_disable.value },
+]
 const columns: ProTableColumn<RoleEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -82,7 +67,7 @@ const columns: ProTableColumn<RoleEntity>[] = [
   // { align: 'center', prop: 'roleSort', label: '排序', width: 80 },
   { align: 'center', prop: 'status', label: '状态', slot: 'status', width: 80 },
   { align: 'center', prop: 'remark', label: '备注', showOverflowTooltip: true },
-  { align: 'center', prop: 'createTime', label: '创建时间', width: 160 },
+  { align: 'center', prop: 'createTime', label: '创建时间', width: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', width: 132 },
 ]
 
@@ -117,7 +102,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

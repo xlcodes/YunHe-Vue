@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'CopilotBubble' })
-import 'markstream-vue/index.css'
+import 'markstream-vue/index.css' // https://markstream-vue-docs.simonhe.me/zh
 import 'katex/dist/katex.min.css'
 import CodeBlockNode from './CodeBlockNode.vue'
 import { copyText } from '@/utils'
@@ -90,7 +90,7 @@ const isLastAssistant = computed(() => {
   --copilot-bubble-font-size: var(--el-font-size-base); // 消息字体大小
   --copilot-bubble-gap: 16px; // 消息容器间距
   --copilot-bubble-avatar-size: 42px; // 头像大小
-  --copilot-bubble-content-bg-color: #ffffff; // 消息内容背景颜色
+  --copilot-bubble-content-bg-color: var(--el-bg-color); // 消息内容背景颜色
   --copilot-bubble-triangle-size: 8px; // 消息内容三角形大小
   --copilot-bubble-content-gap: 4px; // 消息内容与头像间距
 }

@@ -58,5 +58,5 @@ export interface DictSelectItem extends DictDataEntity {
   /** 字典标签 */
   label: string
   /** 字典键值 */
-  value: string
+  value: any
 }

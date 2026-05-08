@@ -3,7 +3,7 @@
     <!-- 侧栏折叠控制 -->
     <Hamburger class="navbar-item hover-effect" @toggleClick="appStore.toggleSidebar" />
     <!-- 面包屑导航 -->
-    <Breadcrumb v-if="!getterStore.isMobile && settingStore.showBreadcrumb" />
+    <Breadcrumb v-if="!appStore.isMobile && settingStore.showBreadcrumb" />
 
     <div class="right h-full ml-auto flex-center">
       <!-- 全屏控件 -->
@@ -37,7 +37,6 @@ import ThemeSwitch from './ThemeSwitch.vue'
 import UserDropDown from './UserDropDown.vue'
 
 const appStore = useAppStore()
-const getterStore = useGetterStore()
 const settingStore = useSettingStore()
 const { isFullscreen } = useFullscreen()
 

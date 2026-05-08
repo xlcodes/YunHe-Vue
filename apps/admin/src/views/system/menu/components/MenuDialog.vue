@@ -4,8 +4,7 @@
       <el-row :gutter="16">
         <el-col :span="24">
           <el-form-item label="上级菜单" prop="parentId">
-            <el-tree-select v-model="model.parentId" check-strictly node-key="id" :data="parentList" :props="{ label: 'menuName' }" place="请选择上级菜单" clearable>
-            </el-tree-select>
+            <el-tree-select v-model="model.parentId" check-strictly node-key="id" :data="parentList" :props="{ label: 'menuName' }" place="请选择上级菜单" clearable> </el-tree-select>
           </el-form-item>
         </el-col>
 
@@ -105,7 +104,7 @@ const emits = defineEmits<{
   getList: []
 }>()
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 const { sys_normal_disable, sys_menu_visible } = useDict('sys_normal_disable', 'sys_menu_visible')
 
 /** 表单实例对象 */
@@ -117,7 +116,7 @@ const parentList = ref<MenuTreeEntity[]>([])
 const model = ref({} as MenuEntity)
 const loading = ref<boolean>(false)
 const visible = ref<boolean>(false)
-const dialogWidth = computed(() => (getterStore.isDesktop ? '640px' : 'calc(100% - 32px)'))
+const dialogWidth = computed(() => (appStore.isDesktop ? '640px' : 'calc(100% - 32px)'))
 const dialogTitle = computed(() => (isUpdate.value ? '更新菜单数据' : '新增菜单数据'))
 const isUpdate = ref<boolean>(false)
 const isExternalPath = computed(() => isExternal(model.value.path))

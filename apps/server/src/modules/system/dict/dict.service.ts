@@ -176,7 +176,7 @@ export class DictService {
   /** 清空所有字典类型的缓存 */
   public async clearDictCache() {
     const keys = await this.redisService.keys(`${RedisConstant.DICTTYPE_KEY}:*`)
-    if (keys.length) await this.redisService.del(keys)
+    if (keys.length) await this.redisService.del(...keys)
     return '刷新成功'
   }
 }

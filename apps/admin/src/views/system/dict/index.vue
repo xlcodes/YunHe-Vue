@@ -1,30 +1,10 @@
 <template>
   <div class="app-content">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['system:dict:query']">
-      <el-form-item label="字典名称" prop="dictName">
-        <el-input v-model="queryParams.dictName" placeholder="请输入字典名称" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="字典类型" prop="dictType">
-        <el-input v-model="queryParams.dictType" placeholder="请输入字典类型" clearable style="width: 200px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="字典状态" :options="sys_normal_disable" clearable style="width: 160px"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['system:dict:query']"></ProSearch>
 
     <div class="mb-16px">
       <el-button plain type="primary" @click="handleCreate" v-permissions="['system:dict:create']">
-        <template #icon> <SvgIcon name="Add" /> </template>
+        <template #icon> <SvgIcon name="Plus" /> </template>
         <span>新增</span>
       </el-button>
       <el-button plain type="danger" @click="handleDelete()" :disabled="!isMultiple" v-permissions="['system:dict:delete']">
@@ -74,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DictTypeEntity, DictTypeQueryParams } from '@/types'
+import type { DictTypeEntity, DictTypeQueryParams, ProSearchItem } from '@/types'
 import type { ProTableColumn } from '@/types'
 import { DictRequest } from '@/api/system/dict.request'
 import { TipModal } from '@/utils'
@@ -89,7 +69,6 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<DictTypeQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 
 const visible = ref<boolean>(false)
 const dialogTitle = ref<string>('新增字典')
@@ -97,9 +76,14 @@ const formRef = useTemplateRef('formRef')
 const form = ref<Partial<DictTypeEntity>>({ status: '1' })
 const isEdit = computed(() => !!form.value.id)
 
-const getterStore = useGetterStore()
-const dialogWidth = computed(() => (getterStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
+const appStore = useAppStore()
+const dialogWidth = computed(() => (appStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'dictName', label: '字典名称' },
+  { type: 'input', prop: 'dictType', label: '字典类型' },
+  { type: 'select', prop: 'status', label: '字典状态', options: sys_normal_disable.value },
+]
 const columns: ProTableColumn<DictTypeEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -107,7 +91,7 @@ const columns: ProTableColumn<DictTypeEntity>[] = [
   { align: 'center', prop: 'dictType', label: '字典类型', showOverflowTooltip: true, minWidth: 180 },
   { align: 'center', prop: 'status', label: '状态', slot: 'status' },
   { align: 'center', prop: 'remark', label: '备注', showOverflowTooltip: true, minWidth: 120 },
-  { align: 'center', prop: 'createTime', label: '创建时间', minWidth: 160 },
+  { align: 'center', prop: 'createTime', label: '创建时间', minWidth: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', width: 120 },
 ]
 
@@ -149,7 +133,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

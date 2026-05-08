@@ -161,7 +161,7 @@ export class UserService {
     if (!userId?.trim()) return
     const keys = await this.redisService.keys(`*${userId}*`)
     if (!keys.length) return '未发现需要清除的用户缓存'
-    await this.redisService.del(keys)
+    await this.redisService.del(...keys)
     return `成功清除 ${keys.length} 个相关缓存`
   }
 }

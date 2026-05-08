@@ -1,7 +1,7 @@
 <template>
   <div :class="classes">
     <!-- mobile 端侧边栏遮罩层 -->
-    <div v-if="getterStore.isMobile && !appStore.isCollapse" class="drawer-bg" @click="appStore.closeSidebar(true)"></div>
+    <div v-if="appStore.isMobile && !appStore.isCollapse" class="drawer-bg" @click="appStore.closeSidebar(true)"></div>
     <Sidebar class="sidebar-container" />
     <div class="main-container clearFix">
       <header class="fixed-header">
@@ -21,7 +21,6 @@ defineOptions({ name: 'Layout' })
 import { Sidebar, Navbar, AppMain, TagsView, SettingPanel } from './components'
 
 const appStore = useAppStore()
-const getterStore = useGetterStore()
 const settingStore = useSettingStore()
 
 const classes = computed(() => [

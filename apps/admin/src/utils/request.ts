@@ -16,6 +16,7 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     NProgress.start()
+    // 让每个请求携带自定义 token 请根据实际情况自行修改
     const accessToken = getAccessToken()
     if (accessToken) config.headers[CommonConstant.AUTHORIZATION] = `${CommonConstant.TOKEN_PREFIX} ${accessToken}`
     return config
@@ -31,15 +32,18 @@ instance.interceptors.response.use(
     NProgress.done()
     // console.log('response: ', response)
     const responseType = response.config.responseType || ''
-
+    const contentType = (response.headers['content-type'] || '') as string
     let code = response.data.code || 200
     let message = response.data.message
 
-    console.log('code: ', code, message)
-    console.log('responseType: ', responseType)
+    console.log('contentType: ', contentType)
+    console.log('code: ', code, message, responseType)
+
+    const isJsonBlob = response.data instanceof Blob && response.data.type.includes('application/json')
+    const isJsonStream = response.data instanceof ReadableStream && contentType.includes('application/json')
 
     // 处理二进制返回出现的 JSON 字符串情况
-    if (response.data instanceof Blob && response.data.type.includes('application/json')) {
+    if (isJsonBlob || isJsonStream) {
       const info = await new Response(response.data).json()
       code = info.code
       message = info.message
@@ -76,12 +80,22 @@ instance.interceptors.response.use(
 
     return response
   },
-  (error) => {
+  (error: any) => {
     NProgress.done()
     console.log(error)
     let { message } = error
-
-    if (error?.response?.data?.message) message = error.response.data.message
+    if (message == 'Network Error') {
+      message = '后端接口连接异常'
+    }
+    if (message.includes('timeout')) {
+      message = '系统接口请求超时'
+    }
+    if (message.includes('Request failed with status code')) {
+      message = `系统接口 ${message.substr(message.length - 3)} 异常`
+    }
+    if (error?.response?.data?.message) {
+      message = error.response.data.message
+    }
 
     TipModal.msgError(message)
 

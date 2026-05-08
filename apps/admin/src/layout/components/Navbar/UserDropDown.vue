@@ -2,8 +2,8 @@
   <el-dropdown class="avatar-container">
     <div class="avatar-wrapper flex-center">
       <!-- <el-avatar :src="userStore.avatar" :size="36" alt="avatar" class="user-avatar" /> -->
-      <img :src="getterStore.avatar" class="user-avatar" />
-      <span class="user-nickname"> {{ getterStore.nickname }} </span>
+      <img :src="avatar" class="user-avatar" />
+      <span class="user-nickname"> {{ nickname }} </span>
     </div>
 
     <template #dropdown>
@@ -23,7 +23,9 @@ const router = useRouter()
 // const appStore = useAppStore()
 const userStore = useUserStore()
 const settingStore = useSettingStore()
-const getterStore = useGetterStore()
+
+const avatar = computed(() => userStore.avatar)
+const nickname = computed(() => userStore.user.nickname)
 
 const items = [
   { icon: 'User', title: '个人中心', callback: () => router.push('/user/profile') },

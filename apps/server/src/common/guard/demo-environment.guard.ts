@@ -30,10 +30,10 @@ export class DemoEnvironmentGuard implements CanActivate {
     const requestMethod = request.method.toUpperCase()
 
     // 4. 演示环境放行白名单（支持登录/登出等基础接口）
-    const whiteList = ['/login', '/logout']
+    const whiteList = ['/api/login', '/api/logout']
 
     // 5. 判断当前请求路径是否在白名单中
-    const isWhite = whiteList.some((item) => request.originalUrl.includes(item))
+    const isWhite = whiteList.some((item) => request.originalUrl.startsWith(item))
 
     // 6. 演示环境拦截规则：非 GET 请求 + 不在白名单 → 拒绝访问
     if (requestMethod !== 'GET' && !isWhite) throw new BusinessException('演示环境，不允许操作')

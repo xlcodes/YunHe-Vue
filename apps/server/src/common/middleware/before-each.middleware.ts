@@ -32,7 +32,7 @@ export class BeforeEachMiddleware implements NestMiddleware {
     const requestId = request[CommonConstant.REQUEST_ID_KEY]
     const keys = ['authorization', 'user-agent']
     const headers = keys.reduce((acc, key) => ({ ...acc, [key]: request.headers[key] }), {})
-    const url = request.baseUrl || ''
+    const url = request.path || ''
     this.logger.verbose(`${method} ${url} ${requestId}`)
     const logInfo: Record<string, any> = {}
     if (query && Object.keys(query).length) logInfo.query = query

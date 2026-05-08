@@ -1,23 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['monitor:online:query']">
-      <el-form-item label="登录地址" prop="ip">
-        <el-input v-model="queryParams.ip" placeholder="请输入登录地址" clearable style="width: 240px" @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="用户名称" prop="username">
-        <el-input v-model="queryParams.username" placeholder="请输入用户名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>搜索</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items="items" v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['monitor:online:query']" />
 
     <ProTable ref="tableRef" v-loading="loading" :data="list" :columns="columns">
       <template #action="{ row }">
@@ -31,7 +14,7 @@
 
 <script setup lang="ts">
 import { TipModal } from '@/utils'
-import type { ProTableColumn } from '@/types'
+import type { ProSearchItem, ProTableColumn } from '@/types'
 import { OnlineRequest } from '@/api/monitor/online.request'
 import type { OnlineEntity, OnlineQueryParams } from '@/types'
 
@@ -39,8 +22,11 @@ const list = ref<OnlineEntity[]>([])
 const total = ref<number>(0)
 const loading = ref<boolean>(true)
 const queryParams = ref<OnlineQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'ip', label: '登录地址' },
+  { type: 'input', prop: 'username', label: '用户名称' },
+]
 const columns: ProTableColumn<OnlineEntity>[] = [
   { align: 'center', type: 'index', label: '序号', width: 64 },
   { align: 'center', prop: 'userId', label: '用户ID', showOverflowTooltip: true },
@@ -74,7 +60,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 
@@ -82,7 +67,7 @@ async function handleForceLogout(row: OnlineEntity) {
   try {
     const { cancel } = await TipModal.confirm(`是否确认强退用户"${row.username}"？`)
     if (cancel) return TipModal.msg(`操作取消`)
-    await OnlineRequest.forceLogout({ userId: row.userId })
+    await OnlineRequest.forceLogout({ userId: row.userId, uuid: row.uuid })
     await getList()
     TipModal.msgSuccess(`强退成功`)
   } catch (error: any) {

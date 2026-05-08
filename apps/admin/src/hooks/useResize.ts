@@ -6,7 +6,6 @@ const MAX_MOBILE_WIDTH = 768
 export function useResize() {
   const route = useRoute()
   const appStore = useAppStore()
-  const getterStore = useGetterStore()
 
   /** 用于判断当前设备是否为移动端 */
   function _isMobile(): boolean {
@@ -19,14 +18,14 @@ export function useResize() {
     if (document.hidden) return
     appStore.device = _isMobile() ? 'mobile' : 'desktop'
     document.documentElement.dataset['device'] = appStore.device
-    if (getterStore.isMobile) appStore.closeSidebar(true)
+    if (appStore.isMobile) appStore.closeSidebar(true)
   }
 
   /** 监听路由变化，根据设备类型调整布局 */
   watch(
     () => route.name,
     () => {
-      if (getterStore.isMobile && !appStore.isCollapse) appStore.closeSidebar(false)
+      if (appStore.isMobile && !appStore.isCollapse) appStore.closeSidebar(false)
     },
     { immediate: true },
   )

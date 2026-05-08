@@ -10,6 +10,9 @@ export const useAppStore = defineStore('app', () => {
   /** 全局组件大小 */
   const size = ref<ComponentSize>(getComponentSize())
 
+  const isMobile = computed(() => device.value === 'mobile')
+  const isDesktop = computed(() => device.value === 'desktop')
+
   /** 面包屑开关菜单栏的回调 */
   function toggleSidebar(): void {
     withoutAnimation.value = false
@@ -30,5 +33,15 @@ export const useAppStore = defineStore('app', () => {
     setComponentSize(value)
   }
 
-  return { isCollapse, withoutAnimation, device, size, setSize, toggleSidebar, closeSidebar }
+  return {
+    isCollapse,
+    withoutAnimation,
+    device,
+    size,
+    isMobile,
+    isDesktop,
+    setSize,
+    toggleSidebar,
+    closeSidebar,
+  }
 })

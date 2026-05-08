@@ -2,7 +2,7 @@ import { LoginDto } from './auth.dto'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { Injectable, Logger } from '@nestjs/common'
-import { formatTime, verifyPassword } from '@/utils'
+import { formatTime, randomUUID, verifyPassword } from '@/utils'
 import { RedisService } from '@/shared/redis.service'
 import { CaptchaService } from '@/shared/captcha.service'
 import { UserService } from '../system/user/user.service'
@@ -45,11 +45,12 @@ export class AuthService {
       const { accessTokenKey, accessToken } = await this.generateAccessToken(user)
       // 5. 更新登录时间
       this.userService.getRepository().update(userId, { loginTime: formatTime() })
-      this.logService.createLoginLog(request, '登录成功', accessTokenKey)
+      this.logService.createLoginLog(request, '登录成功', userId, accessTokenKey)
       // 6. 记录日志
       return { accessToken, expiresIn: this.expiresIn }
-    } catch (error) {
-      this.logService.createLoginLog(request, error.message || '登录失败')
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : '登录失败'
+      this.logService.createLoginLog(request, errorMsg)
       return Promise.reject(error)
     }
   }
@@ -89,9 +90,10 @@ export class AuthService {
   /** 退出登录 */
   public async logout(token: string) {
     try {
-      const payload: AuthType.JwtPayload = this.jwtService.verify(token)
-      const keys = await this.redisService.keys(`*${payload.userId}*`)
-      if (keys.length) await this.redisService.del(keys)
+      const { userId, uuid }: AuthType.JwtPayload = this.jwtService.verify(token)
+      const tokenKey = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}:${uuid}`
+      const onlineKey = `${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}:${uuid}`
+      await this.redisService.del(tokenKey, onlineKey)
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : '退出登录失败'
       this.logger.error(errorMsg)
@@ -115,8 +117,9 @@ export class AuthService {
   /** 生成 AccessToken 并存入 Redis */
   private async generateAccessToken(user: any) {
     const { id: userId, username } = user
-    const accessTokenKey = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}`
-    const accessToken = this.jwtService.sign({ userId, username })
+    const uuid = randomUUID()
+    const accessTokenKey = `${RedisConstant.ACCESS_TOKEN_KEY}:${userId}:${uuid}`
+    const accessToken = this.jwtService.sign({ userId, username, uuid })
     await this.redisService.set(accessTokenKey, accessToken, 'EX', this.expiresIn)
     return { accessToken, accessTokenKey }
   }

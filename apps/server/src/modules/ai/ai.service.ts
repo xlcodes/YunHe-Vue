@@ -5,20 +5,30 @@ import { ConfigService } from '@nestjs/config'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { ChatOpenAI, ChatOpenAIFields } from '@langchain/openai'
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages'
+import { createAgent, CreateAgentParams, initChatModel } from 'langchain'
+import { tools } from './tools'
 
 @Injectable()
 export class AiService {
-  private llm: ChatOpenAI
-  private llmSync: ChatOpenAI
+  private model: ChatOpenAI
 
   constructor(private readonly configService: ConfigService) {
-    this.initLLM()
+    this.initChatModel()
+  }
+
+  public async test() {
+    const messages = [new SystemMessage('你是一个专业的天气助手'), new HumanMessage('北京的天气怎么样？')]
+    const result = await this.agent.invoke({
+      messages,
+    })
+    console.log('result: ', result)
+    return result
   }
 
   public async streamChat(chatDto: ChatDto, response: ExpressResponse) {
     const langChainMessages = this.convertToLangChainMessage(chatDto.messages)
     const chatPromptTemplate = ChatPromptTemplate.fromMessages(langChainMessages)
-    const chain = chatPromptTemplate.pipe(this.llm)
+    const chain = chatPromptTemplate.pipe(this.model)
     const stream = await chain.stream({})
     for await (const chunk of stream) {
       const content = chunk?.content || ''
@@ -29,16 +39,22 @@ export class AiService {
     if (!response.writableEnded) response.end()
   }
 
-  private initLLM() {
+  private get agent() {
+    const options: CreateAgentParams = { model: this.model }
+    options.tools = tools
+    return createAgent(options)
+  }
+
+  /** 初始化聊天模型 */
+  private initChatModel() {
     const options: ChatOpenAIFields = {}
     options.apiKey = this.configService.get<string>(ConfigConstant.OPENAI_API_KEY)
     options.model = this.configService.get<string>(ConfigConstant.OPENAI_MODEL)
     options.temperature = this.configService.get<number>(ConfigConstant.OPENAI_TEMPERATURE)
     options.maxTokens = this.configService.get<number>(ConfigConstant.OPENAI_MAX_TOKENS)
-    options.configuration = options.configuration ?? {}
+    options.configuration = {}
     options.configuration.baseURL = this.configService.get<string>(ConfigConstant.OPENAI_BASE_URL)
-    this.llm = new ChatOpenAI({ ...options, streaming: true })
-    this.llmSync = new ChatOpenAI({ ...options, streaming: false })
+    this.model = new ChatOpenAI({ ...options })
   }
 
   private convertToLangChainMessage(messages: Message[]) {

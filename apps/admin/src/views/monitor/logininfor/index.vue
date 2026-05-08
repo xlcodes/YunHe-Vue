@@ -1,26 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['monitor:logininfor:query']">
-      <el-form-item label="登录地址" prop="ip">
-        <el-input v-model="queryParams.ip" placeholder="请输入登录地址" clearable style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="登录账号" prop="username">
-        <el-input v-model="queryParams.username" placeholder="请输入登录账号" clearable style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="登录状态" clearable style="width: 240px" :options="sys_common_status"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['monitor:logininfor:query']" />
 
     <div class="mb-16px">
       <el-button :loading type="danger" plain @click="handleDelete()" :disabled="!isMultiple" v-permissions="['monitor:logininfor:delete']">
@@ -52,7 +32,7 @@
 
 <script setup lang="ts">
 import { linkDownload, TipModal } from '@/utils'
-import type { ProTableColumn } from '@/types'
+import type { ProSearchItem, ProTableColumn } from '@/types'
 import { LogininforRequest } from '@/api/monitor/logininfor.request'
 import type { LogininfoEntity, LogininforQueryParams } from '@/types'
 
@@ -65,19 +45,23 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<LogininforQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'ip', label: '登录地址' },
+  { type: 'input', prop: 'username', label: '登录账号' },
+  { type: 'select', prop: 'status', label: '登录状态', options: sys_common_status.value },
+]
 const columns: ProTableColumn<LogininfoEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
   { align: 'center', prop: 'requestId', label: '访问编号', showOverflowTooltip: true },
   { align: 'center', prop: 'username', label: '用户名称', showOverflowTooltip: true },
-  { align: 'center', prop: 'ip', label: '地址', showOverflowTooltip: true, minWidth: 100 },
-  { align: 'center', prop: 'location', label: '登录地点', showOverflowTooltip: true },
-  { align: 'center', prop: 'os', label: '操作系统', showOverflowTooltip: true, minWidth: 120 },
-  { align: 'center', prop: 'browser', label: '浏览器', showOverflowTooltip: true, width: 140 },
+  { align: 'center', prop: 'ip', label: '地址', showOverflowTooltip: true, minWidth: 140 },
+  { align: 'center', prop: 'location', label: '登录地点', showOverflowTooltip: true, minWidth: 150 },
+  { align: 'center', prop: 'os', label: '操作系统', showOverflowTooltip: true, minWidth: 150 },
+  { align: 'center', prop: 'browser', label: '浏览器', showOverflowTooltip: true, width: 160 },
   { align: 'center', prop: 'status', label: '登录状态', slot: 'status', width: 90 },
-  { align: 'center', prop: 'message', label: '描述', showOverflowTooltip: true, width: 180 },
+  { align: 'center', prop: 'message', label: '描述', showOverflowTooltip: true, width: 200 },
   { align: 'center', prop: 'loginTime', label: '登录时间', width: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', width: 80 },
 ]
@@ -150,7 +134,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

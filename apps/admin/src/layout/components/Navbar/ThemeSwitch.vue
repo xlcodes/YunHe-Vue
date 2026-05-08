@@ -23,7 +23,7 @@ async function toggleTheme(event: MouseEvent) {
   const clipPath = [`circle(0px at ${clientX}px ${clientY}px)`, `circle(${radius}px at ${clientX}px ${clientY}px)`]
   const pseudoElement = isDark.value ? '::view-transition-old(root)' : '::view-transition-new(root)'
   const easing = 'cubic-bezier(0.28, 0, 0.44, 1)' // 苹果风格
-  document.documentElement.animate({ clipPath: isDark.value ? clipPath.reverse() : clipPath }, { duration: 500, easing, pseudoElement })
+  document.documentElement.animate({ clipPath: isDark.value ? clipPath.reverse() : clipPath }, { duration: 500, fill: 'both', easing, pseudoElement })
   await nextTick()
   settingStore.saveSetting({ showTip: false })
 }

@@ -1,23 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form inline v-permissions="['system:menu:query']">
-      <el-form-item label="菜单名称" prop="menuName">
-        <el-input v-model="queryForm.menuName" placeholder="请输入菜单名称" clearable></el-input>
-      </el-form-item>
-      <el-form-item label="菜单状态" prop="status">
-        <el-select v-model="queryForm.status" placeholder="请选择菜单状态" style="width: 200px" clearable :options="sys_normal_disable"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items="items" v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['system:menu:query']"></ProSearch>
 
     <div class="mb-16px">
       <el-button type="primary" plain @click="handleCreate()" v-permissions="['system:menu:create']">
@@ -60,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MenuEntity, MenuQueryParams, MenuTreeEntity } from '@/types'
+import type { MenuEntity, MenuQueryParams, MenuTreeEntity, ProSearchItem } from '@/types'
 import { isExternal, listToTree, TipModal } from '@/utils'
 import { MenuRequest } from '@/api/system/menu.request'
 import type { ProTableColumn } from '@/types'
@@ -77,9 +60,14 @@ const isExpandAll = ref<boolean>(false)
 /** 是否重新渲染表格状态 */
 const refreshTable = ref<boolean>(true)
 /** 查询表单 */
-const queryForm = ref<MenuQueryParams>({})
+const queryParams = ref<MenuQueryParams>({})
 /** 菜单树数据 */
 const list = ref<MenuTreeEntity[]>([])
+
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'menuName', label: '菜单名称' },
+  { type: 'select', prop: 'status', label: '菜单状态', options: sys_normal_disable.value },
+]
 /** 表格列配置 */
 const columns: ProTableColumn<MenuEntity>[] = [
   { align: 'left', label: '菜单名称', slot: 'menuName', width: 185 },
@@ -97,7 +85,7 @@ const columns: ProTableColumn<MenuEntity>[] = [
 async function getList() {
   try {
     loading.value = true
-    const records = await MenuRequest.findList(queryForm.value)
+    const records = await MenuRequest.findList(queryParams.value)
     list.value = listToTree(records)
     loading.value = false
   } catch (error: any) {
@@ -112,7 +100,7 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryForm.value = {}
+  queryParams.value = {}
   handleQuery()
 }
 

@@ -1,29 +1,6 @@
 <template>
   <div class="app-content flex flex-col h-full">
-    <el-form ref="queryParamsRef" :model="queryParams" inline v-permissions="['monitor:operlog:query']">
-      <el-form-item label="系统模块" prop="title">
-        <el-input v-model="queryParams.title" placeholder="请输入系统模块" clearable style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="操作人员" prop="username">
-        <el-input v-model="queryParams.username" placeholder="请输入操作人员" clearable style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="操作地址" prop="ip">
-        <el-input v-model="queryParams.ip" placeholder="请输入操作地址" clearable style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="操作状态" clearable style="width: 240px" :options="sys_common_status"> </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button plain type="primary" @click="handleQuery">
-          <template #icon> <SvgIcon name="Search" /> </template>
-          <span>查询</span>
-        </el-button>
-        <el-button plain type="danger" @click="resetQuery">
-          <template #icon> <SvgIcon name="Refresh" /> </template>
-          <span>重置</span>
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <ProSearch :items="items" v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['monitor:operlog:query']" />
 
     <div class="mb-16px">
       <el-button :loading type="danger" plain @click="handleDelete()" :disabled="!isMultiple" v-permissions="['monitor:operlog:delete']">
@@ -65,8 +42,7 @@
 <script setup lang="ts">
 import OperateDetailDialog from './detail.vue'
 import { linkDownload, TipModal } from '@/utils'
-import type { ProTableColumn } from '@/types'
-import type { OperLogEntity, OperlogQueryParams } from '@/types'
+import type { OperLogEntity, OperlogQueryParams, ProTableColumn, ProSearchItem } from '@/types'
 import { OperateinfoRequest } from '@/api/monitor/operlog.request'
 
 const { sys_oper_type, sys_common_status } = useDict('sys_oper_type', 'sys_common_status')
@@ -79,9 +55,14 @@ const loading = ref<boolean>(true)
 const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<OperlogQueryParams>({ pageNo: 1, pageSize: 10 })
-const queryParamsRef = useTemplateRef('queryParamsRef')
 const operateDetailDialogRef = useTemplateRef('operateDetailDialogRef')
 
+const items: ProSearchItem[] = [
+  { type: 'input', prop: 'title', label: '系统模块' },
+  { type: 'input', prop: 'username', label: '操作人员' },
+  { type: 'input', prop: 'ip', label: '操作地址' },
+  { type: 'select', prop: 'status', label: '操作状态', options: sys_common_status.value },
+]
 const columns: ProTableColumn<OperLogEntity>[] = [
   { align: 'center', type: 'selection' },
   { align: 'center', type: 'index', label: '序号', width: 64 },
@@ -93,7 +74,7 @@ const columns: ProTableColumn<OperLogEntity>[] = [
   { align: 'center', prop: 'location', label: '操作地点', showOverflowTooltip: true },
   { align: 'center', prop: 'requestMethod', label: '请求方法', width: 90 },
   { align: 'center', prop: 'status', label: '操作状态', slot: 'status', width: 90 },
-  { align: 'center', prop: 'operTime', label: '操作时间', width: 160 },
+  { align: 'center', prop: 'operTime', label: '操作时间', width: 170 },
   { align: 'center', prop: 'duration', label: '消耗时间', slot: 'duration', width: 100 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', minWidth: 120 },
 ]
@@ -170,7 +151,6 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryParamsRef.value?.resetFields()
   handleQuery()
 }
 

@@ -48,14 +48,14 @@ const emits = defineEmits<{
   getList: []
 }>()
 
-const getterStore = useGetterStore()
+const appStore = useAppStore()
 const { sys_job_group, sys_job_status } = useDict('sys_job_group', 'sys_job_status')
 
 const visible = ref<boolean>(false)
 const formRef = useTemplateRef('formRef')
 const form = ref({} as JobEntity)
 const isUpdate = ref<boolean>(false)
-const dialogWidth = computed(() => (getterStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
+const dialogWidth = computed(() => (appStore.isDesktop ? '600px' : 'calc(100% - 32px)'))
 const dialogTitle = computed(() => (isUpdate.value ? '编辑定时任务' : '新增定时任务'))
 const tipMessage = computed(() => (isUpdate.value ? '编辑成功' : '新增成功'))
 

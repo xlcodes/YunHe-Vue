@@ -24,25 +24,25 @@ export class LogService {
   /* -------------------------------------------------------------------------- */
 
   /** 新增登录日志 */
-  public async createLoginLog(request: ExpressRequest, message: string, tokenKey?: string) {
+  public async createLoginLog(request: ExpressRequest, message: string, userId?: string, accessTokenKey?: string) {
     const { browser, os } = this.parseUserAgent(request.headers['user-agent'] || '') //获取用户电脑信息
     const logininfor = new LogininforEntity()
     logininfor.username = request.body.username
     logininfor.ip = getRequestIp(request)
     logininfor.location = await getLocationByIP(logininfor.ip)
-    logininfor.status = tokenKey ? CommonConstant.STATUS_NORMAL : CommonConstant.STATUS_DISABLE
+    logininfor.status = userId ? CommonConstant.STATUS_NORMAL : CommonConstant.STATUS_DISABLE
     logininfor.message = message
     logininfor.loginTime = formatTime()
     logininfor.browser = browser
     logininfor.os = os
     logininfor.requestId = request[CommonConstant.REQUEST_ID_KEY] // 从请求上下文获取请求 ID
-
     // 如果登录成功，就记录这个登录信息，方便在线用户查询
-    if (tokenKey) {
+    if (userId && accessTokenKey) {
       const { ip, location, username, loginTime, browser, os } = logininfor
-      const userId = tokenKey.replace(`${RedisConstant.ACCESS_TOKEN_KEY}:`, '')
-      const record = { userId, ip, location, username, loginTime, browser, os }
-      await this.redisService.set(`${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}`, JSON.stringify(record), 'EX', this.expiresIn)
+      const uuid = accessTokenKey.split(':').at(-1)
+      const record = { userId, ip, location, username, loginTime, browser, os, uuid }
+      const key = `${RedisConstant.ADMIN_USER_ONLINE_KEY}:${userId}:${uuid}`
+      await this.redisService.set(key, JSON.stringify(record), 'EX', this.expiresIn)
     }
     await this.logininforRepository.save(logininfor)
     return '添加成功'

@@ -7,15 +7,20 @@ import AutoImport from 'unplugin-auto-import/vite'
 import ElementPlus from 'unplugin-element-plus/vite'
 import AutoComponents from 'unplugin-vue-components/vite'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons-ng'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import viteCompression from 'vite-plugin-compression'
 
 // https://cn.vite.dev/config/
 export default defineConfig(({ mode }) => {
   // 根据当前工作目录中的 `mode` 加载 .env 文件
   // 设置第三个参数为 '' 来加载所有环境变量，而不管是否有 `VITE_` 前缀
   const viteEnv = loadEnv(mode, process.cwd(), 'VITE_') as unknown as ImportMetaEnv
+  const isDev = mode === 'development'
 
   return {
+    // 项目根目录（默认当前目录，无需修改，规范路径）
+    root: process.cwd(),
     // 部署应用包时的基本 URL
     base: viteEnv.VITE_PUBLIC_PATH ?? '/',
 
@@ -45,18 +50,20 @@ export default defineConfig(({ mode }) => {
       createSvgIconsPlugin({
         iconDirs: [fileURLToPath(new URL('./src/assets/icons', import.meta.url))],
         symbolId: 'icon-[dir]-[name]',
-        // bakerOptions: {
-        //   svgoOptions: {
-        //     plugins: [
-        //       {
-        //         name: 'removeAttrs',
-        //         params: {
-        //           attrs: ['fill', 'class', 'version', 't', 'p-id', 'width', 'height'],
-        //         },
-        //       },
-        //     ],
-        //   },
-        // },
+      }),
+      viteCompression({
+        algorithm: 'gzip', // 使用 gzip 压缩
+        ext: '.gz', // 生成的文件扩展名
+        threshold: 10240, // 仅压缩大于 10KB 的文件
+        deleteOriginFile: false, // 是否删除原始文件
+        compressionOptions: { level: 9 }, // 压缩级别，1-9，越高压缩率越大
+        filter: /\.(js|css|json|html|ico|svg)(\?.*)?$/i, // 过滤文件类型
+      }),
+      visualizer({
+        open: true, //注意这里要设置为true，否则无效
+        filename: 'stats.html', //分析图生成的文件名
+        gzipSize: true, // 收集 gzip 大小并将其显示
+        brotliSize: true, // 收集 brotli 大小并将其显示
       }),
     ],
 
@@ -68,9 +75,10 @@ export default defineConfig(({ mode }) => {
     },
 
     server: {
-      //  设置为 0.0.0.0 或者 true 将监听所有地址，包括局域网和公网地址
+      // 允许外部访问（团队协作时，其他设备可通过 IP 访问本地项目）
       host: true,
       // 指定开发服务器端口。注意：如果端口已经被使用，Vite 会自动尝试下一个可用的端口，所以这可能不是开发服务器最终监听的实际端口
+      // 开发环境端口（项目建议避开 80、443 等常用端口，防止冲突）
       port: parseInt(viteEnv.VITE_SERVER_PORT),
       // 是否自动打开浏览器
       open: viteEnv.VITE_AUTO_OPEN === 'true',
@@ -85,9 +93,14 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      sourcemap: false,
       // 指定打包文件的输出目录。默认值为 dist ，当 dist 被占用或公司有统一命名规范时，可进行调整
       outDir: viteEnv.VITE_OUTPUT_DIR,
+      // 静态资源输出目录（规范静态资源路径，便于 CDN 部署）
+      assetsDir: 'assets',
+      // 取消生产环境 sourceMap（避免暴露源码，提升安全性，调试时可临时开启）
+      sourcemap: false,
+      // 打包时删除输出目录（避免旧产物残留，规范）
+      emptyOutDir: true,
       // 设置为 false 可以禁用最小化混淆，或是用来指定使用哪种混淆器。默认使用 Oxc Minifier，它比 terser 快 30~90 倍，但压缩率仅差 0.5~2%
       minify: 'oxc',
       // 警告阈值，超过该值的 chunk 会触发警告。默认值为 2048（2MB）
@@ -103,19 +116,24 @@ export default defineConfig(({ mode }) => {
           // 包的入口文件名称
           entryFileNames: 'js/[name]-[hash].js',
           // 打包的文件进行拆包处理
-          manualChunks(chunk) {
-            // 这个 chunk 就是所有文件的绝对路径
-            // 因为 node_modules 中的依赖通常是不会改变的 所以直接单独打包出去
-            // 这个 return 的值就是打包的名称
-            // 可以利用浏览器的缓存机制 减少请求次数
-            if (chunk.includes('pinia')) return 'pinia'
-            if (chunk.includes('echarts')) return 'echarts'
-            if (chunk.includes('vue-router')) return 'vue-router'
-            if (chunk.includes('markdown-it')) return 'markdown-it'
-            if (chunk.includes('codemirror')) return 'codemirror'
-            if (chunk.includes('element-plus')) return 'element-plus'
-            if (chunk.includes('dayjs') || chunk.includes('axios') || chunk.includes('lodash-es')) return 'utils'
-            if (chunk.includes('node_modules')) return 'vendor'
+          // codeSplitting: true,
+          codeSplitting: {
+            groups: [
+              { name: 'shiki-langs', test: /node_modules[\\/]@shikijs[\\/]langs/, priority: 50 },
+              { name: 'shiki-themes', test: /node_modules[\\/]@shikijs[\\/]themes/, priority: 49 },
+              { name: 'shiki-core', test: /node_modules[\\/]@shikijs/, priority: 48 },
+              { name: 'mermaid', test: /node_modules[\\/]mermaid/, priority: 35 },
+              { name: 'element-plus', test: /node_modules[\\/]element-plus/, priority: 30 },
+              { name: 'langium', test: /node_modules[\\/]langium/, priority: 22 },
+              { name: 'codemirror', test: /node_modules[\\/](codemirror|@codemirror)/, priority: 35 },
+              { name: 'echarts', test: /node_modules[\\/](echarts|zrender)/, priority: 25 },
+              { name: 'cytoscape', test: /node_modules[\\/]cytoscape/, priority: 19 },
+              { name: 'markdown-it', test: /node_modules[\\/]markdown-it/, priority: 18 },
+              { name: 'katex', test: /node_modules[\\/]katex/, priority: 17 },
+              { name: 'vue-vendor', test: /node_modules[\\/](vue|vue-router|pinia)/, priority: 15 },
+              { name: 'utils', test: /node_modules[\\/](dayjs|axios|lodash-es)/, priority: 12 },
+              { name: 'vendor', test: /node_modules/, priority: 10 },
+            ],
           },
           minify: {
             compress: {
@@ -130,7 +148,12 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ['element-plus', 'axios', 'dayjs', 'vue-router', 'pinia'],
+      // 预构建依赖（将常用第三方依赖提前构建，提升冷启动速度）
+      include: ['vue', 'element-plus', 'axios', 'dayjs', 'vue-router', 'pinia'],
+      // 预构建缓存目录（Vite 8 优化缓存策略，提升二次启动速度）
+      cacheDir: fileURLToPath(new URL('./node_modules/.vite/optimize-deps', import.meta.url)),
+      // 强制预构建（如果依赖更新，强制重新预构建）
+      force: isDev,
     },
 
     css: {
@@ -140,18 +163,19 @@ export default defineConfig(({ mode }) => {
        */
       preprocessorMaxWorkers: true,
       /**
+       * CSS 预处理器配置（支持 SCSS/SASS，项目常用）
        * 建议只用来嵌入 SCSS 的变量声明文件，嵌入后全局可用
        * 该选项可以用来为每一段样式内容添加额外的代码。但是要注意，如果你添加的是实际的样式而不仅仅是变量，那这些样式在最终的产物中会重复。
        * https://cn.vitejs.dev/config/shared-options.html#css-preprocessoroptions-extension-additionaldata
        */
       preprocessorOptions: {
         scss: {
-          // additionalData: `@use "@/styles/element-plus/el-theme-var.scss" as *;`,
           additionalData: `
             @use "@/styles/element-plus/el-theme-light.scss";
             @use "@/styles/element-plus/el-theme-dark.scss";`,
         },
       },
+      lightningcss: {},
     },
   }
 })

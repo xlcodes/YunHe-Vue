@@ -226,7 +226,7 @@ export const STATIC_ROUTE_LIST: RouteRecordRaw[] = [
   // 404页面（必须放在最后）
   {
     path: '/:pathMatch(.*)*', // The not found page must be placed last
-    component: () => import('@/views/error/404.vue'),
+    component: () => import('@/views/core/error/404.vue'),
     meta: { hidden: true },
   },
 ]

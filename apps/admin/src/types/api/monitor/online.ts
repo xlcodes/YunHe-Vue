@@ -22,4 +22,6 @@ export interface OnlineEntity {
   os: string
   /** 登录时间 */
   loginTime: string
+  /** 登录设备标识 */
+  uuid: string
 }

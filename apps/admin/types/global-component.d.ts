@@ -10,6 +10,7 @@ declare module 'vue' {
     IconSelect: (typeof import('../src/components/IconSelect/index.vue'))['default']
     ProChart: (typeof import('../src/components/ProChart/index.vue'))['default']
     ProTable: (typeof import('../src/components/ProTable/index.vue'))['default']
+    ProSearch: (typeof import('../src/components/ProSearch/index.vue'))['default']
     ProPagination: (typeof import('../src/components/ProPagination/index.vue'))['default']
   }
 }

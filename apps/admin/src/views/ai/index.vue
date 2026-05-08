@@ -8,8 +8,8 @@
       <div class="chat-input flex flex-col flex-shrink-0">
         <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" v-model.trim="prompt" placeholder="请输入问题" @keyup.enter.exact="handleSubmit"></el-input>
         <div class="flex items-center gap-8px">
-          <!-- <el-tag type="primary" disabled>深度思考</el-tag> -->
-          <!-- <el-tag type="primary" :effect="enableInternetSearch ? 'dark' : 'light'" @click="toggleInternetSearch">联网搜索</el-tag> -->
+          <el-tag type="primary" disabled>深度思考</el-tag>
+          <el-tag type="primary" :effect="enableInternetSearch ? 'dark' : 'light'" @click="toggleInternetSearch">联网搜索</el-tag>
           <div class="ml-auto flex-center gap-8px">
             <el-link type="danger" @click="clearInput" :disabled="!prompt">清空</el-link>
             <el-link type="primary" @click="handleSubmit" :disabled="loading || !prompt">发送</el-link>
@@ -32,6 +32,7 @@ import { messages as defaultMessages } from './messages.ts'
 
 const prompt = ref<string>('你是谁？')
 const loading = ref<boolean>(false)
+const enableInternetSearch = ref<boolean>(true)
 const scrollbarRef = useTemplateRef('scrollbarRef')
 // const messages = ref<CopilotMessage[]>([])
 const messages = ref<CopilotMessage[]>(defaultMessages)
@@ -43,7 +44,7 @@ async function scrollToBottom() {
 }
 
 async function streamChat(requestMessages: CopilotMessage[], onChunk: (content: string) => void) {
-  const response = await AiRequest.chat({ messages: requestMessages })
+  const response = await AiRequest.chat({ messages: requestMessages, enableInternetSearch: enableInternetSearch.value })
   const reader = response.getReader()
   const decoder = new TextDecoder()
   while (true) {
@@ -77,7 +78,7 @@ async function handleSubmit() {
     const errMsg = error instanceof Error ? error.message : '未知错误'
     console.log('🚀 ~ error:', errMsg)
     messages.value[lastIndex].content = '❌ 加载失败'
-    return Promise.reject(errMsg)
+    // return Promise.reject(errMsg)
   } finally {
     messages.value[lastIndex].loading = false
     loading.value = false
@@ -99,7 +100,7 @@ async function reGenerate(aiMessageIndex: number) {
     const errMsg = error instanceof Error ? error.message : '未知错误'
     console.log('🚀 ~ error:', errMsg)
     messages.value[lastIndex].content = '❌ 加载失败'
-    return Promise.reject(errMsg)
+    // return Promise.reject(errMsg)
   } finally {
     messages.value[lastIndex].loading = false
     loading.value = false
@@ -118,6 +119,11 @@ function handleExport() {
   const data = JSON.stringify(messages.value)
   const blob = new Blob([data], { type: 'application/json' })
   linkDownload(blob, `${Date.now()}.json`)
+}
+
+// 切换联网搜索
+function toggleInternetSearch() {
+  enableInternetSearch.value = !enableInternetSearch.value
 }
 </script>
 
@@ -145,6 +151,10 @@ function handleExport() {
     border: none;
     resize: none;
     padding: 0;
+  }
+  .el-tag {
+    user-select: none;
+    cursor: pointer;
   }
   .el-button {
     border-radius: 50%;

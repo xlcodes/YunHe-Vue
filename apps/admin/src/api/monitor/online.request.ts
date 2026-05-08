@@ -8,7 +8,7 @@ export abstract class OnlineRequest {
   }
 
   /** 强退用户 */
-  static forceLogout(params: { userId: string }): Promise<string> {
+  static forceLogout(params: { userId: string; uuid: string }): Promise<string> {
     return request.delete(`/monitor/online/forceLogout`, { params })
   }
 }
