@@ -56,8 +56,8 @@ services:
       - TZ=Asia/Shanghai # 设置时区为东八区
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
-    # ports:
-    #   - ${MYSQL_PORT}:3306
+    ports:
+      - ${MYSQL_PORT}:3306
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d

@@ -62,7 +62,7 @@ export async function getLocationByIP(ip: string): Promise<string> {
     if (!region) return '未知位置'
     const [country, _, province, city, isp] = region.split('|')
     const location = `${province || ''} ${city || ''}`.trim()
-    return location || '未知位置'
+    return province !== '0' && city !== '0' ? location : '未知位置'
   } catch (error) {
     return '未知位置'
   }
