@@ -1,5 +1,5 @@
 import { DictService } from './dict.service'
-import { OperLog, BusinessType, PaginationPipe, RequirePermissions } from '@/common'
+import { OperLog, BusinessType, PaginationPipe, RequirePermissions, RepeatSubmit } from '@/common'
 import { Controller, Get, Post, Put, Delete, Body, ParseArrayPipe, Query } from '@nestjs/common'
 import { CreateDictDataDto, CreateDictTypeDto, QueryDictDataDto, QueryDictTypeDto, UpdateDictDataDto, UpdateDictTypeDto } from './dict.dto'
 

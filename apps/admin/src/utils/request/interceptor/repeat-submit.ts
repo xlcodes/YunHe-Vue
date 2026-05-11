@@ -1,3 +1,4 @@
+import { isJsonString } from '@/utils/validate.util'
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
@@ -27,12 +28,16 @@ function stableStringify(value: any, seen = new WeakSet()): string {
   }
   // 5. 基础类型（除了 object 和 bigint）
   if (typeof value === 'function' || typeof value === 'symbol') return 'null'
-  // 6. 循环引用检测
+  // 6. 所有非 object 类型（确保不会再往下走到 WeakSet）
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value)
+  // 7. 防止 seen 参数被外部篡改
+  if (!(seen instanceof WeakSet)) seen = new WeakSet()
+  // 8. 循环引用检测（此时 value 必然是对象）
   if (seen.has(value)) return '"[Circular]"'
   seen.add(value)
-  // 7. 数组
+  // 9. 数组
   if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item, seen)).join(',')}]`
-  // 8. 普通对象（按键排序）
+  // 10. 普通对象（按键排序）
   const keys = Object.keys(value).sort()
   return `{${keys
     .filter((key) => value[key] !== undefined)
@@ -42,7 +47,8 @@ function stableStringify(value: any, seen = new WeakSet()): string {
 
 /** 生成请求唯一 key */
 function getPendingKey(config: AxiosRequestConfig) {
-  const { url, method, params, data } = config
+  const { url, method, params = {} } = config
+  const data = isJsonString(config.data) ? JSON.parse(config.data) : config.data
   return [method, url, stableStringify(params), stableStringify(data)].join('&')
 }
 
@@ -54,8 +60,9 @@ export function repeatSubmitInterceptor(instance: AxiosInstance) {
     // 只拦截提交类请求
     if (!['POST', 'PUT', 'DELETE'].includes(method)) return config
     const key = getPendingKey(config)
+    console.log('key: ', key)
     // 存在重复请求
-    if (pendingMap.has(key)) return Promise.reject(new axios.Cancel('请求正在处理中，请勿重复提交'))
+    if (pendingMap.has(key)) return Promise.reject(new Error('请求正在处理中，请勿重复提交'))
     // 记录请求
     pendingMap.add(key)
     return config
@@ -74,9 +81,13 @@ export function repeatSubmitInterceptor(instance: AxiosInstance) {
     },
     (error) => {
       const config = error?.config
+      console.log('1error: ', JSON.stringify(error))
+      console.log('config: ', config)
+      console.log('1config?.url: ', config?.url)
       // 请求异常后移除
       if (config?.url) {
         const key = getPendingKey(config)
+        console.log(111, pendingMap.has(key))
         pendingMap.delete(key)
       }
 

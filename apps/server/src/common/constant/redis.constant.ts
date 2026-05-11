@@ -40,6 +40,12 @@ export const RedisConstant = {
   DICTTYPE_KEY: 'system:dict',
 
   /**
+   * 防重复提交缓存键前缀
+   * 用于存储防重复提交信息的 Redis 键前缀，值为 'repeat:submit'
+   */
+  REPEAT_SUBMIT_KEY: 'repeat:submit',
+
+  /**
    * 响应缓存键前缀
    * 用于存储响应缓存的 Redis 键前缀，值为 'response:cache'
    */

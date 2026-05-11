@@ -12,11 +12,12 @@ export class CacheService {
     { prefix: RedisConstant.DICTTYPE_KEY, key: '', value: '', remark: '数据字典' },
     { prefix: RedisConstant.THROTTLE_LIMIT, key: '', value: '', remark: '限流处理' },
     { prefix: RedisConstant.RESPONSE_CACHE, key: '', value: '', remark: '响应缓存' },
+    { prefix: RedisConstant.REPEAT_SUBMIT_KEY, key: '', value: '', remark: '防重提交' },
   ]
 
   /** 刷新缓存名称列表 */
   public async getNames() {
-    return this.caches
+    return this.caches.map((item) => ({ ...item }))
   }
 
   /** 清除指定分类下的所有缓存 */

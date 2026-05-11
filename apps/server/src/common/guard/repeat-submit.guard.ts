@@ -1,10 +1,12 @@
 import { Reflector } from '@nestjs/core'
+import { createMd5Hash } from '@/utils'
 import { RedisService } from '@/shared/redis.service'
 import { CommonConstant } from '../constant/common.constant'
 import { DecoratorConstant } from '../constant/decorator.constant'
 import { BusinessException } from '../exception/business.exception'
 import { RepeatSubmitOption } from '../decorator/repeat-submit.decorator'
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
+import { Injectable, CanActivate, ExecutionContext, HttpStatus } from '@nestjs/common'
+import { RedisConstant } from '../constant/redis.constant'
 
 /**
  * 防止重复提交守卫
@@ -32,15 +34,17 @@ export class RepeatSubmitGuard implements CanActivate {
     const requestId = request[CommonConstant.REQUEST_ID_KEY]
 
     // 生成防重唯一键
-    const key = this.getPendingKey(request)
+    const key = `${RedisConstant.REPEAT_SUBMIT_KEY}:${request.path}:${createMd5Hash(this.getPendingKey(request))}`
 
     // 检查是否已存在（重复提交）
     // 使用装饰器内配置的错误消息（默认：数据正在处理中，请勿重复提交）
     const exist = await this.redisService.exists(key)
-    if (exist) throw new BusinessException(options.message ?? '数据正在处理中，请勿重复提交')
+    if (exist) throw new BusinessException(options.message ?? '数据正在处理中，请勿重复提交', HttpStatus.BAD_REQUEST)
 
     // 首次提交：写入 Redis 并设置过期时间
-    await this.redisService.setex(key, options.interval ?? 5, requestId ?? 'unknown') // 值随意，仅做标识
+    const interval = options.interval ?? 5
+    // const interval = 5000
+    await this.redisService.setex(key, interval, requestId ?? 'unknown') // 值随意，仅做标识
 
     return true
   }
@@ -75,12 +79,16 @@ export class RepeatSubmitGuard implements CanActivate {
     }
     // 5. 基础类型（除了 object 和 bigint）
     if (typeof value === 'function' || typeof value === 'symbol') return 'null'
-    // 6. 循环引用检测
+    // 6. 所有非 object 类型（确保不会再往下走到 WeakSet）
+    if (typeof value !== 'object' || value === null) return JSON.stringify(value)
+    // 7. 防止 seen 参数被外部篡改
+    if (!(seen instanceof WeakSet)) seen = new WeakSet()
+    // 8. 循环引用检测（此时 value 必然是对象）
     if (seen.has(value)) return '"[Circular]"'
     seen.add(value)
-    // 7. 数组
+    // 9. 数组
     if (Array.isArray(value)) return `[${value.map((item) => this.stableStringify(item, seen)).join(',')}]`
-    // 8. 普通对象（按键排序）
+    // 10. 普通对象（按键排序）
     const keys = Object.keys(value).sort()
     return `{${keys
       .filter((key) => value[key] !== undefined)
