@@ -22,6 +22,12 @@ export const DecoratorConstant = {
   EXCEL: 'excel:option:list',
 
   /**
+   * 角色装饰器标识
+   * 用于标记需要进行角色校验的接口，值为 'common:auth:roles'
+   */
+  ROLES: 'common:auth:roles',
+
+  /**
    * 权限装饰器标识
    * 用于标记需要进行权限校验的接口，值为 'common:auth:permissions'
    */
