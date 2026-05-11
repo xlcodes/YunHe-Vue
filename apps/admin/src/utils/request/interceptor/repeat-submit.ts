@@ -1,5 +1,4 @@
 import { isJsonString } from '@/utils/validate.util'
-import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 /** 正在请求中的 key 集合 */
@@ -60,7 +59,6 @@ export function repeatSubmitInterceptor(instance: AxiosInstance) {
     // 只拦截提交类请求
     if (!['POST', 'PUT', 'DELETE'].includes(method)) return config
     const key = getPendingKey(config)
-    console.log('key: ', key)
     // 存在重复请求
     if (pendingMap.has(key)) return Promise.reject(new Error('请求正在处理中，请勿重复提交'))
     // 记录请求
@@ -81,9 +79,6 @@ export function repeatSubmitInterceptor(instance: AxiosInstance) {
     },
     (error) => {
       const config = error?.config
-      console.log('1error: ', JSON.stringify(error))
-      console.log('config: ', config)
-      console.log('1config?.url: ', config?.url)
       // 请求异常后移除
       if (config?.url) {
         const key = getPendingKey(config)
