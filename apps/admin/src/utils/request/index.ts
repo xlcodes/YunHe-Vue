@@ -1,7 +1,8 @@
 import axios from 'axios'
-import { getAccessToken, sleep } from '.'
-import { TipModal } from './tip-modal.util'
+import { getAccessToken, sleep } from '..'
 import { CommonConstant } from '@/common'
+import { TipModal } from '../tip-modal.util'
+import { repeatSubmitInterceptor } from './interceptor/repeat-submit'
 
 const NProgress = useProgress({ show: import.meta.env.VITE_REQUEST_NPROGRESS !== 'false' })
 
@@ -11,6 +12,9 @@ const instance = axios.create({
   // timeout 指定请求超时的毫秒数(0 表示无超时时间)，如果请求花费了超过 timeout 的时间，请求将被中断
   timeout: parseInt(import.meta.env.VITE_REQUEST_TIMEOUT || '0') * 1000,
 })
+
+// 防止重复提交请求的拦截器，只拦截提交类请求
+repeatSubmitInterceptor(instance)
 
 // 请求拦截器
 instance.interceptors.request.use(
@@ -81,11 +85,13 @@ instance.interceptors.response.use(
     return response
   },
   (error: any) => {
+    console.log('error: ', error)
     NProgress.done()
     let { message } = error
 
     // 处理取消请求
     if (axios.isCancel(error) || error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError') {
+      // return { errMsg: message, success: false, failed: true }
       return Promise.reject(error)
     }
 
