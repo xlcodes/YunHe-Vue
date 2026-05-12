@@ -11,15 +11,15 @@ export class LogininforEntity {
   @Column({ comment: '用户账号', length: 50, default: null })
   username: string
 
-  @Excel({ name: '登录IP' })
+  @Excel({ name: '登录IP', width: 20 })
   @Column({ comment: '登录IP地址', length: 128, default: null })
   ip: string
 
-  @Excel({ name: '登录地点' })
+  @Excel({ name: '登录地点', width: 20 })
   @Column({ comment: '登录地点', length: 255, default: null })
   location: string
 
-  @Excel({ name: '浏览器类型', width: 20 })
+  @Excel({ name: '浏览器类型', width: 30 })
   @Column({ comment: '浏览器类型', length: 50, default: null })
   browser: string
 

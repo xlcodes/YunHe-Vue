@@ -93,6 +93,7 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
+      cssMinify: 'esbuild',
       // 指定打包文件的输出目录。默认值为 dist ，当 dist 被占用或公司有统一命名规范时，可进行调整
       outDir: viteEnv.VITE_OUTPUT_DIR,
       // 静态资源输出目录（规范静态资源路径，便于 CDN 部署）

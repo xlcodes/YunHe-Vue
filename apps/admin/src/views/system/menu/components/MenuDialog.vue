@@ -96,7 +96,8 @@ defineOptions({ name: 'MenuDialog' })
 import type { GlobalComponents } from 'vue'
 import { MenuRequest } from '@/api/system/menu.request'
 import type { FormRules } from 'element-plus'
-import { isExternal, isStringNumber, TipModal } from '@/utils'
+import { TipModal } from '@/utils'
+import { isExternal, isStringNumber } from '@yunhe-vue/utils'
 import type { MenuEntity, MenuTreeEntity } from '@/types'
 import { CommonConstant } from '@/common'
 

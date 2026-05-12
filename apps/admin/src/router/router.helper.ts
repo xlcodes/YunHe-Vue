@@ -6,7 +6,7 @@ import type { DefineComponent } from 'vue'
 import { camelCase, upperFirst } from 'lodash-es'
 import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 import type { MenuEntity } from '@/types'
-import { isExternal } from '@/utils'
+import { isExternal } from '@yunhe-vue/utils'
 
 /** 首先把你需要动态路由的组件地址全部获取 [vue2 中可以直接用拼接的方式，但是 vue3 中必须用这种方式] */
 const views = import.meta.glob<{ default: DefineComponent }>('@/views/**/*.vue', { eager: false }) // 显式声明懒加载（默认）

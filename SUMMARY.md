@@ -1,403 +1,145 @@
-# 从零到一打造企业级全栈后台管理系统 —— 技术选型、工程化实践与深度思考
+## 项目简介
 
-> 耗时数月独立开发，摘录最具代表性的架构决策与实现细节，欢迎 Star 交流。
-
----
-
-## 一、项目定位：前端开发者进阶全栈的桥梁
-
-**YunHe-Vue**（云禾管理系统）是一套面向前端开发者进阶全栈的企业级后台管理系统模板。
-
-它的核心设计理念是：**TypeScript 贯穿全栈**。前端用 Vue 3 + TS，后端用 NestJS + TS，同一门语言、同一套类型系统，配合 NestJS 与 Vue 高度相似的「模块化 + 依赖注入 + 装饰器」开发范式，让前端开发者在熟悉的生态里完成全栈能力的平滑过渡。
-
-| 项目信息 | 地址                                       |
-| -------- | ------------------------------------------ |
-| 在线演示 | https://cnbox.online                       |
-| 项目文档 | https://ace627.github.io                   |
-| 开源仓库 | https://github.com/Ace627/YunHe-Vue        |
-| 文档仓库 | https://github.com/Ace627/ace627.github.io |
-
-> ⚡ 项目正在持续迭代维护中，Star 是最好的更新动力。
+YunHe-Vue（云禾管理系统）是一套面向前端开发者进阶全栈的企业级后台管理系统模板。采用 **pnpm workspace Monorepo** 架构将前后端同仓管理，前端基于 **Vue 3.5 + TypeScript + Element Plus 2 + Vite 8 + Pinia 3 + Vue Router 5** 构建，后端基于 **NestJS 11 + TypeORM + MySQL 8 + Redis 7 + BullMQ** 搭建。核心设计理念是"TypeScript 贯穿全栈"——同一门语言、同一套类型系统，配合 NestJS 与 Vue 高度相似的「模块化 + 依赖注入 + 装饰器」开发范式，让前端开发者在熟悉的生态里完成全栈能力的平滑过渡。Monorepo 同仓架构的另一大优势是：**AI 辅助编程时可直接阅读前后端关联代码**，无需在不同仓库间切换上下文，从 API 请求到接口处理再到数据库实体一气贯通，大幅提升 AI 代码生成的准确性与工程一致性。最终以 **Docker + Nginx** 多阶段构建实现一键容器化部署。
 
 ---
 
-## 二、技术全景
+## 功能模块
 
-| 层级      | 技术                      | 选型理由                                             |
-| --------- | ------------------------- | ---------------------------------------------------- |
-| 前端框架  | Vue 3.5 + Composition API | 最新 Vue 生态，`<script setup lang="ts">` 语法       |
-| 前端路由  | Vue Router 5              | 动态路由 + 权限过滤，路由配置完全由后端下发          |
-| 状态管理  | Pinia 3                   | 轻量、类型友好，天然适配 Composition API             |
-| UI 组件库 | Element Plus 2            | 企业级组件库，按需导入，SCSS 变量主题化              |
-| 构建工具  | Vite 8 + Rolldown         | 秒级冷启动，内置拆包 / 压缩 / 分析全链路             |
-| CSS 方案  | SCSS + BEM + UnoCSS       | 语义化主方案 + 原子化为辅，灵活可切换                |
-| 后端框架  | NestJS 11                 | 企业级 Node.js 框架，模块化 + 依赖注入 + 装饰器      |
-| ORM       | TypeORM                   | Active Record / Data Mapper 双模式，支持 Migration   |
-| 数据库    | MySQL 8 + Redis 7         | 业务数据 + 缓存 / 队列                               |
-| 消息队列  | BullMQ                    | 基于 Redis 的可靠队列，支撑定时任务调度              |
-| AI 服务   | LangChain + OpenAI        | 流式对话、上下文管理、Token 统计                     |
-| 容器化    | Docker + Nginx            | 多阶段构建 + 健康探针 + Nginx 反向代理 + gzip_static |
-| Monorepo  | pnpm workspace            | 前后端同仓，统一脚本，共享类型                       |
-
----
-
-## 三、核心系统设计 —— 每一个功能都有它的设计考量
-
-### 1. 前后端一体化的 RBAC 权限模型
-
-权限模型是后台系统的骨架，设计不好会让整个项目越写越乱。我的方案是 **RBAC（基于角色的访问控制）+ 前后端双闭环**：
-
-**后端侧**：
+### 🔐 RBAC 权限模型（前后端一体化）
 
 - 用户 → 角色 → 菜单，菜单粒度为「目录 / 菜单 / 按钮」三级
-- 每个接口通过 `@RequirePermissions` 装饰器声明所需权限码
-- JWT 签发时写入用户角色与权限集合，Guard 层统一校验
-- 公共接口通过 `@Public` 装饰器标记跳过鉴权
+- 后端 `@RequirePermissions`、`@RequireRoles` 装饰器声明权限，`@Public` 标记免鉴权接口，`@CurrentUser('userId')` 自动注入当前用户
+- JWT 签发时写入用户角色与权限集合，Guard 层统一校验；权限/角色缓存于 Redis
+- 前端路由由后端动态下发，递归生成路由表并动态注册
+- `v-permissions` 指令控制按钮级 DOM 显隐，`v-roles` 指令按角色粗粒度控制
+- 权限配置全部收敛到后台管理界面，运维与开发分离
+
+### 📂 系统管理
 
-**前端侧**：
-
-- 菜单数据由后端下发，前端递归生成路由表并动态注册
-- 路由守卫在页面跳转时校验权限，无权限重定向 403
-- `v-permissions` 指令控制按钮级 DOM 显隐，比 `v-if` 更语义化
-- `v-roles` 指令按角色控制，适用场景比权限码更粗粒度
-- Permission Store 集中管理路由状态，全局可消费
-
-**设计价值**：权限配置全部收敛到后台管理界面，调整权限分配无需改动代码或重新部署前端，真正实现运维与开发分离。
-
----
-
-### 2. 大文件分片上传 —— 完整的企业级文件传输方案
-
-处理大文件上传不是「能传上去就行」，真正的挑战在于：上传中断后怎么办？重复上传同一文件怎么避免？合并分片时怎么不把服务器内存打满？
-
-我的方案覆盖了全生命周期：
-
-**前端**：计算文件 MD5 → 调用检查接口 → 已存在直接秒传，未上传则按分片并发上传 → 全部上传完成调用合并接口。
-
-**后端**：`checkFile` 接口先查目标文件是否存在（秒传），再查临时目录有哪些分片（断点续传），返回已上传的分片列表，前端只传缺失分片。合并时使用 Node.js Stream 管道，**边读边写不占内存**，这在文件较大的情况下与 `fs.writeFileSync(buffer)` 是数量级的差距。
-
-```typescript
-// 流式合并——不积攒内存，一台小机器也能合大文件
-const writeStream = createWriteStream(finalFilePath)
-for (const chunk of chunks) {
-  await pipeline(createReadStream(resolve(tempDir, chunk)), writeStream, { end: false })
-}
-writeStream.end()
-```
-
-> 📌 当前因服务器资源有限，文件写入本地 `uploads` 目录。但合并逻辑基于 Stream 抽象，替换读写目标为 MinIO / OSS 的 SDK 流即可无缝接入云存储，按需改造即可，不涉及业务层改动。
-
----
-
-### 3. 动态定时任务调度 —— 从硬编码到可视化
-
-传统定时任务最常见的痛点是：需求让你凌晨 3 点跑个 Excel 导出，你得改代码发版。
-
-我的方案基于 **BullMQ + Redis** 实现运行时动态调度：
-
-- 所有业务 Service 通过 NestJS 的 `DiscoveryService` 自动扫描注册到任务服务中
-- 新增任务只需在后台界面填写「Service 类名.方法名(参数)」即可，格式校验由 `analysisInvokeTarget` 方法完整覆盖
-- Cron 表达式的启停、修改、手动执行全部通过 API 操作，无需重启服务
-- 任务执行失败时，支持「立即重试」与「执行一次」两种错误策略，杜绝雪崩
-- 完整的日志记录、分页查询、Excel 导出
-
-```typescript
-// 自动发现业务 Service，无需手动注册
-private loadBusinessServices() {
-  const providers = this.discovery.getProviders()
-  for (const wrapper of providers) {
-    const { metatype } = wrapper
-    if (!metatype || !metatype.name.endsWith('Service')) continue
-    this.serviceMap.set(metatype.name, metatype)
-  }
-}
-```
-
-**设计价值**：任务配置全部可视化，运维人员不需要理解代码，开发者不需要改代码发版。
-
----
-
-### 4. AI 对话模块 —— 企业级落地 LangChain 的完整实践
-
-AI 功能很容易做成 Demo，但真正上线需要考虑：Token 成本怎么控制？长对话上下文怎么管理？并发请求怎么处理？
-
-我的落地策略：
-
-- **流式响应**：使用 SSE 协议逐字返回，用户体验类似 ChatGPT
-- **懒更新摘要**：不是每轮对话都调 AI 生成摘要。设定阈值（如 12 条消息），且只有消息数到达阈值后才每隔 6 条消息生成一次摘要，**大幅削减 AI 调用次数**
-- **上下文策略**：摘要 + 最近 6 条消息组装上下文，在上下文完整度与 Token 消耗之间取平衡
-- **历史持久化**：消息、会话、摘要、Token 用量全部入库，支持会话列表与管理
-
-```typescript
-// 懒更新摘要——只在需要的时候才调 AI，用最小的成本保留上下文
-private async lazyUpdateSummary(conversationId: string) {
-  const count = await this.messageRepository
-    .createQueryBuilder('message')
-    .where('message.conversationId = :conversationId', { conversationId })
-    .getCount()
-
-  if (count < this.SUMMARY_TRIGGER_COUNT) return
-  if ((count - this.SUMMARY_TRIGGER_COUNT) % this.RECENT_MESSAGE_COUNT !== 0) return
-
-  const summary = await this.generateSummary(conversationId)
-  await this.conversationRepository.update(conversationId, { summary })
-}
-```
-
-**设计价值**：这不是一个玩具 Demo，而是真正考虑了生产环境成本和可维护性的工程方案。
-
----
-
-### 5. 云原生健康检查 + 企业级日志 + 操作审计
-
-这一组模块共同构成了系统的「可观测性」：
-
-| 模块     | 实现                                                                                                                 |
-| -------- | -------------------------------------------------------------------------------------------------------------------- |
-| 健康检查 | `/live`（存活探测）+ `/ready`（就绪探测）双探针，适配 K8s Pod 生命周期；网络 / 数据库 / 内存 / 磁盘 / RSS 全维度检查 |
-| 日志系统 | Winston 集成，按日期滚动分割，压缩归档，自动清理 14 天前日志；开发环境控制台输出，生产环境 JSON 文件                 |
-| 操作日志 | `OperationLogInterceptor` 拦截器，自动记录请求耗时、IP + 归属地、query + body 参数、成功/失败状态                    |
-| 登录日志 | 登录成功 / 失败全量记录，IP + 归属地 + 设备 + 浏览器信息                                                             |
-| 在线用户 | Redis 维护活跃 Session，支持强制下线                                                                                 |
-
----
-
-## 四、前端工程化 —— 让代码自己说话
-
-如果说后端系统设计体现的是架构能力，那前端工程化体现的是**开发者对开发体验和代码品质的追求**。
-
-### 4.1 构建全链路优化
-
-#### 智能拆包
-
-不是简单地把 node_modules 拆成 vendor 就完了。我按模块体积、更新频率、缓存策略做了精细化分组：
-
-```typescript
-// vite.config.ts
-codeSplitting: {
-  groups: [
-    { name: 'element-plus', test: /node_modules[\\/]element-plus/, priority: 30 },
-    { name: 'echarts', test: /node_modules[\\/](echarts|zrender)/, priority: 25 },
-    { name: 'vue-vendor', test: /node_modules[\\/](vue|vue-router|pinia)/, priority: 15 },
-    { name: 'utils', test: /node_modules[\\/](dayjs|axios|lodash-es)/, priority: 12 },
-    { name: 'vendor', test: /node_modules/, priority: 10 },
-  ]
-}
-```
-
-**设计逻辑**：`element-plus` 和 `echarts` 体积大且更新频率低，最高优先级独立拆包，最大化浏览器缓存命中率；`vue-vendor` 是框架本身，几乎不更新，也单独拆出；剩余的按优先级逐级兜底。
-
-#### 压缩与部署闭环
-
-- **构建端**：`vite-plugin-compression` 生成 `.gz` 文件，压缩级别 9，阈值 10KB
-- **部署端**：Nginx 开启 `gzip_static on`，直接使用构建产物，不在服务器端实时压缩，降低 CPU 负载
-- **环境变量**：`VITE_DROP_CONSOLE` 和 `VITE_DROP_DEBUGGER` 控制产物清理，生产环境自动剔除
-
-#### 打包分析
-
-集成 `rollup-plugin-visualizer`，构建后自动生成 `stats.html`，展示各模块体积和 gzip / brotli 压缩对比，便于针对性优化。
-
----
-
-### 4.2 开发体验优化
-
-#### 自动按需导入
-
-三个插件形成闭环：
-
-```typescript
-// vite.config.ts
-// 1. Element Plus 组件 + 样式按需导入
-ElementPlus({ useSource: true })
-
-// 2. Vue / Pinia / Vue Router / VueUse 自动导入
-AutoImport({
-  resolvers: [ElementPlusResolver({ importStyle: 'sass' })],
-  imports: ['vue', 'pinia', 'vue-router', '@vueuse/core'],
-  dts: 'types/auto-generate/auto-import.d.ts',
-  dirs: ['src/store/modules', 'src/hooks'],
-})
-
-// 3. 组件自动注册
-AutoComponents({
-  resolvers: [ElementPlusResolver({ importStyle: 'sass' })],
-  dts: 'types/auto-generate/auto-components.d.ts',
-})
-```
-
-**效果**：`ref`、`computed`、`onMounted`、Store、Hooks 全部告别手动 import，IDE 类型提示完美运行。
-
-#### UnoCSS 原子化 CSS
-
-基于 `presetWind3` 预设，兼容 Tailwind / Windi / Bootstrap 规则，同时封装了项目级快捷方式和自定义规则。**作为 SCSS + BEM 主方案的补充**，在需要快速布局或微调间距的场景下使用，不强制，不捆绑。
-
-#### SVG 图标管理自动化
-
-设计师交付的 SVG 往往附带大量 AI / Sketch 导出的冗余属性。项目内置了清理脚本：
-
-```json
-// package.json
-"svg:clean": "esno ./scripts/svg-clean.ts"
-```
-
-放入 `src/assets/icons` 目录下，执行 `pnpm svg:clean`，批量清理无用属性。同时所有图标统一通过 `SvgIcon` 全局组件使用，`name` 直接取文件名，零配置。
-
----
-
-### 4.3 组件设计的取舍
-
-#### ProTable / ProSearch / ProPagination：组合而非集成
-
-很多后台模板喜欢做一个巨型 `ProTable`，把搜索、表格、分页全部塞到一起，用起来确实方便，但一旦有定制需求就无从下手。
-
-我的方案是**三个独立组件，各司其职**：
-
-- `ProTable` 负责表格渲染，通过 Proxy 代理暴露所有 Element Plus 原生方法
-- `ProSearch` 负责搜索表单，配置化生成
-- `ProPagination` 负责分页逻辑
-
-最大的好处是：你不需要的时候可以不引入，需要定制的时候可以直接用 Element Plus 原生组件，不会被封装层束缚。
-
-#### ECharts 封装：按需引入 + 防御式设计
-
-ECharts 全量引入会显著增加包体积，我用了一个专门的入口文件只注册项目实际使用的图表类型和组件。ProChart 组件内部用 `ResizeObserver` 监听容器变化自动重绘，主题切换时同步更新配色，`onUnmounted` 中调用 `dispose` 防止内存泄漏。
-
-#### DictTag：字典回显的最后一公里
-
-`useDict` Hook 已将字典数据全局缓存到 Pinia Store，但回显时总不能每处都手写 `dictList.find()`。`DictTag` 组件封装了这一步——传入字典类型和值，自动匹配回显文案和样式：
-
-```vue
-<DictTag dictType="sys_status" :value="row.status" />
-```
-
----
-
-### 4.4 KeepAlive 自动匹配：动态组件缓存的优雅解法
-
-动态加载的组件没有静态 `name`，KeepAlive 无法匹配，缓存失效。传统做法是手动写 `defineOptions({ name: 'xxx' })`，但动态路由上百个页面，漏一个就失效。
-
-我的方案是在组件加载时自动注入 `name`：
-
-```typescript
-// router.helper.ts
-export function loadView(componentPath: string) {
-  // ...
-  const componentName = upperFirst(camelCase(componentPath.replace('index', '')))
-  const component = views[path]
-  return () => component().then((comp) => ((comp.default.name = componentName), comp))
-}
-```
-
-动态页面一个 `defineOptions` 都不用写，只有静态路由（如 404）才需要。这背后是对 Vue 组件加载与 KeepAlive 匹配机制的深入理解。
-
----
-
-### 4.5 更多工程化细节速览
-
-| 模块       | 做了什么                                                                                                                     |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 缓存工具   | 参考 Redis 接口封装 localStorage，支持设置过期时间、通配符 key 查询、获取剩余 TTL，统一缓存键常量管理，避免硬编码和冲突      |
-| 进度条     | `useProgress` Hook 封装 nprogress，支持从环境变量控制是否开启，默认配置合并，在 axios 拦截器和路由守卫中统一触发             |
-| 动态标题   | `useDynamicTitle` Hook，监听路由变化自动更新 `document.title`，`onUnmounted` 清理监听器                                      |
-| 递归菜单   | `SidebarItem` 组件递归渲染任意层级菜单，单叶子节点自动提升，外部链接新窗口打开，CSS 变量主题化                               |
-| 系统配置   | `defaultSettings` 集中管理所有配置项默认值，`SettingPanel` 可视化配置面板，用户偏好自动持久化到 local，支持一键重置          |
-| 首屏动画   | 纯 CSS 实现加载动画，避免白屏                                                                                                |
-| 主题切换   | View Transition API 实现从点击位置向外扩散的圆形过渡动效，SCSS `@forward` 自定义 ElementPlus 主题变量，Vite 预处理器自动注入 |
-| 模块化启动 | `main.ts` 只负责串联，`setupPlugins` / `setupDirectives` / `setupStore` / `setupRouter` 各自独立，职责清晰                   |
-
----
-
-## 五、后端架构 —— 分层解耦与防御性设计
-
-### 5.1 响应缓存拦截器 + 防缓存雪崩
-
-热点接口频繁调用会打满数据库连接。我在 NestJS 拦截器层面实现了一套缓存方案：
-
-- `@ResponseCache` 装饰器声明缓存 key 和 TTL
-- `ResponseCacheInterceptor` 透明拦截：命中 Redis 直接返回，未命中执行接口后写入 Redis
-- **TTL 加随机抖动**：每个 key 的过期时间在上限基础上叠加 0~20% 的随机偏移，避免缓存同时过期引发雪崩
-
-```typescript
-// 防雪崩的 TTL 计算
-const baseTtl = options.ttl || 60
-const jitter = Math.floor(Math.random() * (baseTtl * 0.2))
-const ttl = baseTtl + jitter
-```
-
-这与 Redis 官方的 `EXPIRE` 抖动策略原理一致，无需在业务代码里重复实现，一个装饰器即可完成。
-
----
-
-### 5.2 异常处理
-
-`AllExceptionsFilter` 全局捕获异常，区分 `BusinessException`（业务异常，返回友好提示）与未知异常（记录日志并返回通用错误信息），避免敏感信息泄露到前端。
-
----
-
-### 5.3 安全防护
-
-- **Helmet**：设置安全 HTTP 头
-- **限流**：`ThrottlerGuard` 限制接口调用频率
-- **密码加密**：Argon2 算法，比 bcrypt 更抗 GPU 暴力破解
-
----
-
-## 六、快速开始
-
-### 项目脚本一览
-
-```json
-{
-  "scripts": {
-    "dev:server": "pnpm --filter server start:dev",
-    "build:server": "pnpm --filter server build",
-    "dev:admin": "pnpm --filter admin dev",
-    "build:admin": "pnpm --filter admin build",
-    "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down",
-    "docker:restart": "docker compose down && docker compose up -d --build",
-    "docker:reset": "docker compose down -v && docker compose up -d --build",
-    "svg:clean": "esno ./scripts/svg-clean.ts"
-  }
-}
-```
-
-### Docker 一键启动（推荐）
-
-```bash
-pnpm docker:up
-```
-
-服务启动后访问 http://localhost 即可。
-
-### 本地开发
-
-```bash
-pnpm install
-pnpm dev:admin   # 前端
-pnpm dev:server  # 后端
-```
-
----
-
-## 七、写在最后
-
-这个项目是我从 0 到 1 独立完成的——从技术选型与架构设计起步，到组件封装与工程化体系搭建，再到性能优化与细节打磨，每个模块都经过了反复推敲与验证。
-
-它代表了我对「什么是高质量代码」的理解：
-
-- **组件封装要有边界感**——不把功能做死，不把灵活度做没
-- **工程化配置要形成闭环**——构建、压缩、部署三端对齐，不搞半吊子方案
-- **每个功能都要经得起追问**——不只是「能跑」，而是能说出「为什么这样设计」
-
-如果你也在进阶全栈的路上，希望这个项目能给你一些参考和启发。遇到任何问题，欢迎提 Issue 交流。
-
-> ⚡ 项目正在持续迭代维护中，觉得有帮助的话，Star 是最好的鼓励。
-
----
-
-**开源仓库**：https://github.com/Ace627/YunHe-Vue
-
-**在线演示**：https://cnbox.online
-
-**项目文档**：https://ace627.github.io
+- **用户管理** — 增删改查、重置密码、修改密码、角色分配、状态管理
+- **角色管理** — 角色权限分配、角色编码管理
+- **菜单管理** — 目录 / 菜单 / 按钮三级粒度，支持外链、内嵌 iframe
+- **字典管理** — 字典类型 + 字典数据两级结构，`useDict()` Hook 全局缓存 + 并发请求去重（同一类型多个组件同时挂载只发一次请求，其余复用 Promise），后端 Redis 缓存
+- **图标浏览** — SVG 图标集中预览
+
+### 📊 系统监控
+
+- **服务监控** — CPU 使用率、内存占用、磁盘空间、服务器运行信息，`@ResponseCache` 缓存 180 秒
+- **缓存监控** — Redis 实例信息、内存使用量、Key 数量，支持在线缓存管理
+- **健康检查** — `/live`（存活探针）、`/ready`（就绪探针），适配 K8s / Docker Swarm 编排
+- **在线用户** — 实时查看活跃会话，支持强制下线
+- **定时任务** — BullMQ 动态 Cron 调度，运行时启停 / 暂停 / 恢复 / 手动执行
+- **操作日志** — `@OperLog` 装饰器标记即自动记录，IP 归属地解析（`ip2region-ts`）+ 浏览器 / OS 解析
+- **登录日志** — 登录成功 / 失败全量记录，含设备信息
+
+### 📁 大文件分片上传
+
+- **Web Worker 离线哈希** — `crypto.subtle.digest('SHA-256')` 硬件加速计算文件与分片哈希
+- **并发上传** — 5MB 固定分片，3 路并发 Promise.race 协程池
+- **秒传** — `checkFile` 接口查询文件哈希，已存在则跳过上传
+- **断点续传** — `checkFile` 返回已上传分片索引，前端只传缺失分片
+- **流式合并** — 后端 Node.js Stream 管道边读边写，不占内存
+
+### ⏱ 动态定时任务调度
+
+- 基于 **BullMQ + Redis** 实现运行时动态调度
+- 业务 Service 通过 NestJS `DiscoveryService` 自动扫描注册
+- 后台界面填写「类名.方法名(参数)」即可新增任务，`analysisInvokeTarget` 格式校验
+- Cron 表达式启停、修改、手动执行全部通过 API 操作，无需重启
+
+### 🤖 AI 流式对话
+
+- 集成 **LangChain + OpenAI**，SSE 流式输出，支持 `AbortController` 中止
+- **上下文压缩摘要** — 消息量达 12 条触发阈值，自动调用 LLM 将历史对话压缩为摘要存入数据库；每次请求仅携带「摘要 + 最近 6 条消息」，大幅降低 Token 消耗
+- **全链路 Token 统计** — `TokenCounterHandler` 回调自动统计 `promptTokens` / `completionTokens` 并入库
+- **Agent 工具** — 内置联网天气查询 Tool，架构支持扩展
+- 前端 Markdown 渲染（代码高亮 + Mermaid 流程图 + KaTeX 数学公式）
+- 会话管理：新建 / 切换 / 删除 / 重命名 / 导出 JSON
+
+### 🛡 请求安全体系
+
+- **前后端双闭环请求去重**
+  - 前端：Axios 拦截器基于 `Set` 内存去重，仅拦截 POST / PUT / DELETE
+  - 后端：`@RepeatSubmit()` 装饰器 + `RepeatSubmitGuard`，基于 Redis 分布式去重
+  - 两者共享同一套稳定序列化算法（对象键排序 / FormData / File 元数据 / 循环引用检测）
+- **接口限流** — `ThrottlerLimitGuard` 基于 Redis 原子自增，IP + 路径维度限流（10 次 / 10 秒），超限自动拉黑 30 分钟；`@SkipThrottle()` 可豁免
+- **接口响应缓存** — `@ResponseCache({ ttl, key })` 装饰器标记即自动 Redis 缓存，TTL 引入 20% 随机抖动防缓存雪崩
+- **演示环境保护** — `DemoEnvironmentGuard` 开关式拦截非 GET 操作（登录 / 登出白名单除外）
+- **客户端真实 IP** — 兼容 Nginx / Caddy / K8s 多层反向代理，优先级 `x-forwarded-for → x-real-ip → remoteAddress`
+- **Helmet 安全头** + Winston 按日滚动日志
+
+### 📋 统一响应与异常体系
+
+- 全局 `AllExceptionsFilter`：区分开发 / 生产日志，异常语义化翻译（外键约束→"当前数据关联其它资源"）
+- `ReponseTransformInterceptor`：统一包装为 `AjaxResult` 格式（code / success / message / requestId / timestamp），`@Raw()` 可跳过包装
+- `class-validator` DTO 管道校验（`whitelist + transform + stopAtFirstError`）
+- `PaginationPipe` 统一分页参数处理
+
+### 📑 Excel 导入导出
+
+- `@Excel()` 装饰器声明式配置字段映射（列名 / 顺序 / 宽度 / 日期格式 / 字典翻译）
+- ExcelJS 引擎驱动，一键导出含字典回显的标准化 Excel
+- 支持仅导出 / 仅导入 / 双向三种模式
+
+### 📧 邮件 + 图形验证码
+
+- `@nestjs-modules/mailer` + Handlebars 模板引擎，内置验证码 / 告警 / 通知三套模板
+- SMTP 配置化，`EmailService.sendCaptcha()` 一行发送
+- `svg-captcha` 数学表达式验证码，Redis 缓存答案 60 秒过期
+
+### 🖼 前端示例页面
+
+- **ECharts 图表** — 折线 / 柱状 / 饼图 / 雷达 / K 线 / 散点图演示
+- **分片上传 Demo** — 完整上传流程可视化（计算哈希 → 检查 → 上传 → 合并）
+- **水印** — 文本水印 / 多行水印 / 图片水印 / 表格保护四场景
+- **倒计时** — `el-countdown` + `@vueuse/core useTransition` 数值动画
+- **手写签名板** — Canvas 原生实现，画笔颜色 / 粗细可调，支持撤销 / 保存为图片
+- **Markdown 编辑器** — md-editor-v3 封装，支持导出 .md 文件
+- **图片懒加载** — `el-image` 懒加载演示
+
+### 📱 布局与导航
+
+- **Navbar 顶栏** — 侧栏折叠（Hamburger）、面包屑导航（Breadcrumb）、全屏切换（Screenfull）、暗黑主题切换（ThemeSwitch）、组件尺寸切换（SizeSelect）、用户下拉菜单（UserDropDown）
+- **Sidebar 侧栏** — `SidebarItem` 递归渲染多级菜单，`uniqueOpened` 手风琴模式，折叠动画，`hidden` 字段控制显隐
+- **TagsView 多标签页** — 类浏览器 Tab 交互，支持刷新 / 关闭当前 / 关闭其它 / 关闭所有 / 右键菜单，固定标签页（affix）不可关闭，左右箭头滚动
+- **SettingPanel 布局设置** — `el-drawer` 侧边面板，动态标题 / Logo / 手风琴菜单 / 面包屑 / 标签页 / 标签页图标 / 页面转场动效（6 种）均可可视化开关，支持重置与持久化保存
+
+### 🏠 首页与登录
+
+- **Dashboard 首页** — 项目简介 + 技术栈分类展示（通用 / 前端 / 后端，带官方链接卡片）
+- **Login 登录页** — 图形验证码（点击刷新）、记住密码、回车登录，`getTimeGreeting()` 根据时段展示问候语，登录后自动跳转回跳地址
+- **用户个人中心** — 个人信息展示、修改密码（Argon2 加密）
+
+### 📦 共享工具包
+
+- `@yunhe-vue/utils` 独立包 — `formatTime()` 时间格式化、`getTimeGreeting()` 时段问候语，前后端复用
+
+### 🧱 前端组件体系
+
+- **ProTable** — el-table 封装，动态列配置、slot 插槽、加载状态、代理暴露原生方法
+- **ProSearch** — 表单搜索，input / select / date 类型，展开 / 收起，24 格自适应布局
+- **ProPagination** — 分页封装，移动端自适应简化布局
+- **ProChart** — ECharts 封装，暗黑主题自动切换、ResizeObserver 自适应、自动销毁防内存泄漏
+- **DictTag** — 字典值回显组件，自动匹配标签样式
+- **Markdown** — md-editor-v3 封装，暗黑模式适配
+- **SvgIcon** — SVG sprite 图标组件
+- **IconSelect** — 图标选择器
+
+### 🏗 前端工程化
+
+- **路由守卫** — `beforeGuard` 统一鉴权流程（白名单放行 → Token 校验 → 拉取用户信息 → 动态注册路由 → 重定向回跳），`afterGuard` 收尾进度条与动态标题
+- **SCSS + BEM** 为主方案，**UnoCSS** 原子化为辅
+- **暗黑模式** — CSS 变量 + Element Plus SCSS 主题变量，一键切换
+- **响应式布局** — PC / Pad / Mobile 三端适配，侧边栏自动折叠，移动端 `html[data-device='mobile']`
+- **Pinia Store** — 6 个模块分层管理：`user`（用户/角色/权限）、`app`（设备/侧栏/组件尺寸）、`permission`（动态路由）、`setting`（布局配置持久化）、`tagsView`（标签页状态）、`ai`（AI 会话）
+- **自动导入** — `unplugin-auto-import`（ref / computed / onMounted 等）+ `unplugin-vue-components`（Element Plus 组件按需）
+- Vite 8 + Rolldown 构建，内置拆包 / 压缩 / `rollup-plugin-visualizer` 分析
+- **NProgress** 路由切换 + 请求加载双进度条，可通过环境变量独立开关
+
+### 🐳 后端工程化与部署
+
+- **配置管理** — YAML 文件加载 + 环境变量覆盖（Docker 环境自动注入数据库 / Redis / JWT / 邮箱 / OpenAI 配置）
+- **日志** — Winston 按日滚动文件日志，生产环境不输出敏感信息
+- **Docker** — 多阶段构建（前端 Nginx + 后端 Node），健康探针 + Nginx 反向代理 + gzip_static
+- **Monorepo 脚本** — `pnpm dev:admin` / `dev:server` / `docker:up` / `docker:down` 统一编排

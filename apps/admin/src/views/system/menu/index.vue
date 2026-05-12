@@ -43,11 +43,12 @@
 </template>
 
 <script setup lang="ts">
-import type { MenuEntity, MenuQueryParams, MenuTreeEntity, ProSearchItem } from '@/types'
-import { isExternal, listToTree, TipModal } from '@/utils'
-import { MenuRequest } from '@/api/system/menu.request'
+import { isExternal } from '@yunhe-vue/utils'
 import type { ProTableColumn } from '@/types'
+import { listToTree, TipModal } from '@/utils'
 import MenuDialog from './components/MenuDialog.vue'
+import { MenuRequest } from '@/api/system/menu.request'
+import type { MenuEntity, MenuQueryParams, MenuTreeEntity, ProSearchItem } from '@/types'
 
 /** 菜单对话框实例 */
 const menuDialogRef = ref<InstanceType<typeof MenuDialog>>()
