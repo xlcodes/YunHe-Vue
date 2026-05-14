@@ -176,7 +176,7 @@ import { registerChinaMap } from './register-china-map'
 import { formatTime, getWeekDay } from '@yunhe-vue/utils'
 import { browserData, osData, chinaMapScatterData, chinaFlyLines, systemResourceData, redisCommandData, onlineUserData, loginRecordData } from './mock-data'
 
-const isFullscreen = ref(false)
+// const isFullscreen = ref(false)
 const mapReady = ref(false)
 
 /** 实时计算当前页面的帧率（FPS） */
@@ -207,18 +207,18 @@ onMounted(async () => {
   mapReady.value = ok
 })
 
-function toggleFullscreen() {
-  // if (!document.fullscreenElement) {
-  //   document.documentElement.requestFullscreen()
-  //   isFullscreen.value = true
-  // } else {
-  //   document.exitFullscreen()
-  //   isFullscreen.value = false
-  // }
-  isFullscreen.value = !isFullscreen.value
-  document.querySelector('.monitor-dashboard')?.classList.toggle('monitor-dashboard--screenfull', isFullscreen.value)
-  console.log("document.querySelector('.monitor-dashboard'): ", document.querySelector('.monitor-dashboard'))
-}
+// function toggleFullscreen() {
+//   // if (!document.fullscreenElement) {
+//   //   document.documentElement.requestFullscreen()
+//   //   isFullscreen.value = true
+//   // } else {
+//   //   document.exitFullscreen()
+//   //   isFullscreen.value = false
+//   // }
+//   isFullscreen.value = !isFullscreen.value
+//   document.querySelector('.monitor-dashboard')?.classList.toggle('monitor-dashboard--screenfull', isFullscreen.value)
+//   console.log("document.querySelector('.monitor-dashboard'): ", document.querySelector('.monitor-dashboard'))
+// }
 
 const browserOption = computed<EChartsOption>(() => ({
   tooltip: {
