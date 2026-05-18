@@ -36,6 +36,27 @@
 
 ---
 
+## 演示图
+
+<table>
+  <tr>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-4728c7b2-c9d7-4b37-bf67-608d169987b6.png" /></td>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-79ee503a-8cb0-4d5d-97e1-02ab4d9d34ea.png" /></td>
+  </tr>
+  <tr>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-5fa0ba44-bfc0-40b8-b2ca-0be298fb62f2.png" /></td>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-4bb9e2f5-bad1-4efe-a26d-0feccf2af8fb.png" /></td>
+  </tr>
+  <tr>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-e34d2cc1-54b4-448c-a3d6-519c6232217e.png" /></td>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-d0b17597-071b-43f5-8145-0842da68c858.png" /></td>
+  </tr>
+  <tr>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-28b2eeb7-b4fa-48e2-afcd-57a9a6f4d826.png" /></td>
+    <td><img src="https://cdn.phototourl.com/free/2026-05-18-049f179b-6247-41d0-80cd-82fa0931103a.png" /></td>
+  </tr>
+</table>
+
 ## 🚀 技术选型
 
 | 层级          | 技术栈                      | 说明                                           |
